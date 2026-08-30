@@ -272,8 +272,9 @@ function createTrainer(root, level) {
   }
 
   // Перерисовка с проездом фигуры от старого поля к новому.
-  function renderMove(move, animate) {
-    const from = animate && !reducedMotion?.matches ? squareRect(move.from) : null;
+  function renderMove(move, animate, fromRect) {
+    const allowed = (animate || fromRect) && !reducedMotion?.matches;
+    const from = allowed ? (fromRect || squareRect(move.from)) : null;
     render();
     if (!from) return;
     const to = squareRect(move.to);
@@ -306,7 +307,7 @@ function createTrainer(root, level) {
     }, REPLY_DELAY);
   }
 
-  function attemptMove(from, to, animate) {
+  function attemptMove(from, to, animate, fromRect) {
     if (!canPlay()) return;
     const position = currentFrame().position;
     const legal = legalMoves(position, from[0], from[1]).some(([r, c]) => r === to[0] && c === to[1]);
@@ -324,7 +325,7 @@ function createTrainer(root, level) {
     if (!correct) {
       wrongPending = true;
       setFeedback('error', 'Ход неверный', 'Отмени его кнопкой «Возврат хода».');
-      renderMove(move, animate);
+      renderMove(move, animate, fromRect);
       return;
     }
 
@@ -333,12 +334,12 @@ function createTrainer(root, level) {
     if (solved()) {
       setFeedback('success', 'Уровень пройден', level.solvedNote);
       setProgress(progressSolved);
-      renderMove(move, animate);
+      renderMove(move, animate, fromRect);
       return;
     }
     setFeedback('success', 'Ход верный', 'Смотри ответ соперника.');
     playReply(reply);
-    renderMove(move, animate);
+    renderMove(move, animate, fromRect);
   }
 
   function undoMove() {
@@ -446,13 +447,15 @@ function createTrainer(root, level) {
     if (!drag) return;
     const current = drag;
     drag = null;
+    // Позиция «призрака» до удаления — от неё фигура доедет до поля.
+    const ghostRect = current.ghost ? current.ghost.getBoundingClientRect() : null;
     current.ghost?.remove();
     current.square.classList.remove('dragging');
 
     if (current.moved) {
       const target = squareFromPoint(event.clientX, event.clientY);
       selected = null;
-      if (target) attemptMove(current.from, [Number(target.dataset.r), Number(target.dataset.c)], false);
+      if (target) attemptMove(current.from, [Number(target.dataset.r), Number(target.dataset.c)], false, ghostRect);
       else render();
       return;
     }
@@ -566,6 +569,10 @@ mobileMenu?.querySelectorAll('a').forEach(link => link.addEventListener('click',
   mobileMenu.setAttribute('aria-hidden', 'true');
 }));
 
+const revealTargets = document.querySelectorAll('.reveal');
+if (!('IntersectionObserver' in window)) {
+  revealTargets.forEach(el => el.classList.add('is-visible'));
+}
 const observer = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -574,7 +581,19 @@ const observer = new IntersectionObserver(entries => {
     }
   });
 }, {threshold: 0.12});
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+if ('IntersectionObserver' in window) revealTargets.forEach(el => observer.observe(el));
+
+// Что уже в зоне видимости — показываем сразу, не дожидаясь наблюдателя:
+// иначе при его сбое первый экран остался бы пустым.
+function revealVisibleNow() {
+  revealTargets.forEach(el => {
+    if (el.classList.contains('is-visible')) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) el.classList.add('is-visible');
+  });
+}
+revealVisibleNow();
+window.addEventListener('load', revealVisibleNow);
 
 // Лёгкое движение декоративного слоя в hero.
 const visual = document.querySelector('.hero-visual');
