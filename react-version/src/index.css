@@ -1,0 +1,187 @@
+@import 'tailwindcss';
+
+/* Токены дизайна: те же значения, что и в исходной вёрстке. */
+@theme {
+  --color-bg: #f3efe8;
+  --color-paper: #f9f7f2;
+  --color-ink: #121311;
+  --color-muted: #72736d;
+  --color-line: #d8d4cb;
+  --color-accent: #ff6b2d;
+  --color-accent-soft: #ffe7dc;
+  --color-dark: #1a1b19;
+  --color-white: #fffdf9;
+  --color-panel: #22241f;
+  --color-panel-deep: #191b18;
+  --color-panel-line: #373a35;
+
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Manrope', system-ui, sans-serif;
+
+  --shadow-card: 0 24px 60px rgba(18, 19, 17, 0.09);
+
+  /* Точки перелома как в исходной вёрстке: телефон < 641, десктоп >= 981 */
+  --breakpoint-sm: 641px;
+  --breakpoint-lg: 981px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Появление блоков при прокрутке. Скрываем только когда скрипт жив,
+   иначе при его сбое страница осталась бы пустой. */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+.js .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Доска ───────────────────────────────────────────────────────────────
+   Клетки и метки живут в CSS: сеткой Tailwind это выражается хуже,
+   а псевдоэлементы подсказок в утилитах не описать вовсе. */
+.board {
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  background: #e5ddcf;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(18, 19, 17, 0.08);
+}
+.board.large {
+  border-radius: 3px;
+}
+.square {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.square.light {
+  background: #eee7da;
+}
+.square.dark {
+  background: #b98f6a;
+}
+.piece {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+.piece.moving {
+  will-change: transform;
+  z-index: 2;
+}
+
+.board.interactive .square {
+  cursor: default;
+  touch-action: none;
+}
+.board.interactive .square.movable {
+  cursor: grab;
+}
+.board.interactive.locked .square.movable {
+  cursor: default;
+}
+.square.selected::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 3px rgba(255, 131, 82, 0.9);
+}
+.square.last-move::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 131, 82, 0.22);
+}
+.square.target {
+  cursor: pointer;
+}
+.square.target::after {
+  content: '';
+  position: absolute;
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgba(18, 19, 17, 0.26);
+  pointer-events: none;
+}
+.square.target.capture::after {
+  width: 84%;
+  height: 84%;
+  background: transparent;
+  border: 3px solid rgba(18, 19, 17, 0.26);
+  box-sizing: border-box;
+}
+.square.target:hover::after {
+  background: rgba(255, 107, 45, 0.85);
+}
+.square.target.capture:hover::after {
+  background: transparent;
+  border-color: rgba(255, 107, 45, 0.85);
+}
+.square.hint-from::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 3px var(--color-accent);
+  background: rgba(255, 107, 45, 0.18);
+}
+.square.dragging .piece {
+  opacity: 0.25;
+}
+.drag-ghost {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  object-fit: contain;
+  object-position: center bottom;
+  transform: translate(-50%, -50%);
+}
+
+/* Бегущая строка: сдвиг ровно на ширину группы — стык незаметен. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-1 * var(--marquee-shift, 50%)));
+  }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee var(--marquee-duration, 24s) linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track,
+  .js .reveal {
+    animation: none;
+    transition: none;
+  }
+}
