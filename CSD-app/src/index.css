@@ -1,0 +1,388 @@
+@import 'tailwindcss';
+
+/* Токены дизайна: те же значения, что и в исходной вёрстке.
+   Значения ниже — светлая тема; тёмная переопределяет их в блоке
+   html[data-theme='dark'] после @theme. Правило: в разметке не должно
+   остаться зашитых цветов, иначе в одной из двух тем они сломаются. */
+@theme {
+  --color-bg: #f3efe8;
+  --color-paper: #f9f7f2;
+  --color-ink: #121311;
+  --color-muted: #72736d;
+  --color-line: #d8d4cb;
+  --color-accent: #ff6b2d;
+  --color-accent-soft: #ffe7dc;
+  --color-dark: #1a1b19;
+  --color-white: #fffdf9;
+
+  /* Панель тренажёра. Раньше она была тёмной в любом случае; теперь это
+     обычная поверхность, которая следует теме: светлая карточка на светлом
+     сайте, тёмная — на тёмном. panel-deep — подложка под доской, на ступень
+     глубже самой панели. */
+  --color-panel: #f9f7f2;
+  --color-panel-deep: #f0ece3;
+  --color-panel-line: #e4dfd5;
+
+  /* Поверхность карточек и модалок. Отдельно от --color-white: в тёмной
+     теме карточка тёмная, а «белый» как имя цвета туда не годится. */
+  --color-surface: #fffdf9;
+
+  /* Три ступени тишины текста: muted -> faint -> subtle. Заменяют ~35
+     почти одинаковых серых, которые раньше были зашиты по месту. */
+  --color-faint: #8a8b84;
+  --color-subtle: #9a998f;
+
+  /* Граница, проступающая на hover — заметнее обычной --color-line. */
+  --color-line-strong: #bdb9b0;
+
+  /* Заливка кнопок без собственного фона (ghost/outline). Кнопка всегда
+     СВЕТЛЕЕ подложки — и в светлой теме, и в тёмной: так она читается как
+     приподнятая, а не как вдавленная. Отсюда значения: чуть светлее самой
+     светлой поверхности темы. */
+  --color-fill: #fffefc;
+  --color-fill-hover: #ffffff;
+
+  /* Контрастный блок-инверсия (тёмная плашка на светлой теме и наоборот):
+     пилюля «Завершено», тёмные кнопки, карточка серии. Пара всегда
+     используется вместе, иначе в одной из тем получится текст в цвет фона. */
+  --color-invert: #121311;
+  --color-invert-fg: #fffdf9;
+  /* Приглушённый текст и вложенная плашка внутри блока-инверсии. */
+  --color-invert-muted: #9b9d96;
+  --color-invert-soft: #2a2c28;
+  /* Акцент поверх --color-invert-soft: плашка переворачивается вместе с
+     карточкой, поэтому оранжевый на ней нужен разной светлоты в двух темах. */
+  --color-accent-on-invert: #ff6b2d;
+
+  /* Текст, который остаётся светлым в обеих темах: на оранжевой кнопке и
+     на секциях, которые тёмные всегда (Demo, тренажёр, FAQ). */
+  --color-on-accent: #fffdf9;
+  --color-on-dark: #f4f2ec;
+
+  /* Насыщенный акцент для текста на --color-accent-soft. */
+  --color-accent-strong: #9a3d16;
+
+  --color-success: #3e8e4c;
+  --color-success-bg: #e3efe4;
+  --color-success-line: #cfe0d3;
+  --color-danger: #d2542f;
+  --color-danger-bg: #fbf1ee;
+  --color-danger-line: #e8c4bb;
+
+  /* Подложка модалки и полупрозрачная шапка — им нужны свои значения:
+     ink в тёмной теме светлый, и затемнение превратилось бы в засветку. */
+  --color-scrim: #121311;
+  --color-header-bg: rgba(243, 239, 232, 0.9);
+  --color-header-line: rgba(216, 212, 203, 0.8);
+
+  --font-sans: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Manrope', sans-serif;
+
+  --shadow-card: 0 22px 60px rgba(18, 19, 17, 0.1);
+  /* Подъём карточки на hover. Тень цвета чернил на тёмном фоне невидима,
+     поэтому значение тоже переключается вместе с темой. */
+  --shadow-lift: 0 12px 30px rgba(18, 19, 17, 0.05);
+
+  /* Исходная вёрстка наследует line-height 1.5 от body, а утилиты text-*
+     тянут за собой свой интерлиньяж и ломают вертикальный ритм. */
+  --text-xs--line-height: 1.5;
+  --text-sm--line-height: 1.5;
+  --text-base--line-height: 1.5;
+  --text-lg--line-height: 1.5;
+  --text-xl--line-height: 1.5;
+  --text-2xl--line-height: 1.5;
+  --text-3xl--line-height: 1.5;
+  --text-4xl--line-height: 1.5;
+  --text-5xl--line-height: 1.5;
+
+  /* Точки перелома как в исходной вёрстке: телефон < 641, десктоп >= 981 */
+  --breakpoint-sm: 641px;
+  --breakpoint-lg: 981px;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Системные элементы (скроллбары, поля ввода) должны совпадать с темой. */
+  color-scheme: light;
+}
+
+/* Тёмная тема. Обычный CSS после @theme, а не второй @theme: переменные из
+   @theme живут в слое theme, а этот блок вне слоёв и потому перебивает их
+   независимо от специфичности. Атрибут ставит lib/theme.js (и инлайн-скрипт
+   в index.html — до первой отрисовки, чтобы не было белой вспышки). */
+html[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #0d0f0e;
+  --color-paper: #151816;
+  --color-surface: #1a1e1b;
+
+  --color-ink: #f4f2ec;
+  --color-muted: #9a9e96;
+  --color-faint: #8b908a;
+  --color-subtle: #6f756e;
+
+  --color-line: #30352f;
+  --color-line-strong: #454b43;
+  --color-fill: #2b2f29;
+  --color-fill-hover: #363b34;
+
+  --color-accent: #ff7a3d;
+  --color-accent-soft: #382017;
+  --color-accent-strong: #ffb08a;
+
+  /* Инверсия меняется местами: светлая плашка с тёмным текстом. */
+  --color-invert: #f2f0ea;
+  --color-invert-fg: #111411;
+  --color-invert-muted: #636960;
+  --color-invert-soft: #e2e0d9;
+  --color-accent-on-invert: #9a3d16;
+
+  /* Демо-секция лендинга остаётся тёмной полосой в обеих темах, но здесь
+     уходит глубже фона страницы. */
+  --color-dark: #090b0a;
+
+  --color-panel: #22241f;
+  --color-panel-deep: #191b18;
+  --color-panel-line: #373a35;
+
+  --color-success: #79e08a;
+  --color-success-bg: #1c3322;
+  --color-success-line: #2b4a32;
+  --color-danger: #ff8f6b;
+  --color-danger-bg: #2a1a16;
+  --color-danger-line: #5c3b30;
+
+  --color-scrim: #000;
+  --color-header-bg: rgba(13, 15, 14, 0.86);
+  --color-header-line: rgba(48, 53, 47, 0.9);
+
+  --shadow-card: 0 24px 70px rgba(0, 0, 0, 0.32);
+  --shadow-lift: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tailwind обнуляет начертание заголовков, а исходная вёрстка опирается на
+   браузерное bold. Возвращаем его — но именно в слое base, иначе правило
+   перебивает утилиты (например, отступы у blockquote). */
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  strong,
+  b {
+    font-weight: 700;
+  }
+  blockquote {
+    margin: 0;
+  }
+}
+
+/* Появление блоков при прокрутке. Скрываем только когда скрипт жив,
+   иначе при его сбое страница осталась бы пустой. */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(20px);
+}
+/* Появление через animation, а не transition: иначе оно занимает свойство
+   transition и hover карточек замедляется до 0.65s вместо 0.2s. */
+.js .reveal.is-visible {
+  animation: reveal 0.65s ease forwards;
+}
+@keyframes reveal {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Шапка всегда в первом экране, ждать скролла для IntersectionObserver ей
+   незачем — проигрывает свою анимацию один раз сразу при появлении в DOM.
+   Чистый CSS: работает даже если скрипт ещё не успел выполниться. */
+.header-drop {
+  animation: header-drop 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes header-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+
+/* ── Доска ───────────────────────────────────────────────────────────────
+   Клетки и метки живут в CSS: сеткой Tailwind это выражается хуже,
+   а псевдоэлементы подсказок в утилитах не описать вовсе. */
+.board {
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  background: #e5ddcf;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(18, 19, 17, 0.08);
+}
+.board.large {
+  border-radius: 3px;
+}
+.square {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.square.light {
+  background: #eee7da;
+}
+.square.dark {
+  background: #b98f6a;
+}
+.piece {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+.piece.moving {
+  will-change: transform;
+  z-index: 2;
+}
+
+.board.interactive .square {
+  cursor: default;
+  touch-action: none;
+}
+.board.interactive .square.movable {
+  cursor: grab;
+}
+.board.interactive.locked .square.movable {
+  cursor: default;
+}
+.square.selected::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 3px rgba(255, 131, 82, 0.9);
+}
+.square.last-move::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 131, 82, 0.22);
+}
+/* Эмодзи фигуры в подписях хода ("Ход по координатам"/"Поле решения",
+   components/MoveText.jsx) — крупнее окружающего текста, иначе теряется
+   рядом с мелкими буквами координат. Тот же приём, что в CSD-app-admin. */
+.piece-emoji {
+  font-size: 1.6em;
+  line-height: 1;
+  vertical-align: -2px;
+}
+.square.target {
+  cursor: pointer;
+}
+.square.target::after {
+  content: '';
+  position: absolute;
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgba(18, 19, 17, 0.26);
+  pointer-events: none;
+}
+.square.target.capture::after {
+  width: 84%;
+  height: 84%;
+  background: transparent;
+  border: 3px solid rgba(18, 19, 17, 0.26);
+  box-sizing: border-box;
+}
+.square.target:hover::after {
+  background: rgba(255, 107, 45, 0.85);
+}
+.square.target.capture:hover::after {
+  background: transparent;
+  border-color: rgba(255, 107, 45, 0.85);
+}
+.square.hint-from::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 3px var(--color-accent);
+  background: rgba(255, 107, 45, 0.18);
+}
+.square.dragging .piece {
+  opacity: 0.25;
+}
+.drag-ghost {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  object-fit: contain;
+  object-position: center bottom;
+  transform: translate(-50%, -50%);
+}
+
+/* Бегущая строка: сдвиг ровно на ширину группы — стык незаметен. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-1 * var(--marquee-shift, 50%)));
+  }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee var(--marquee-duration, 24s) linear infinite;
+  will-change: transform;
+}
+
+/* Карусель заданий: скрываем нативный скроллбар и затухаем края маской —
+   сама прокрутка и перетаскивание управляются из AssignmentCarousel.jsx. */
+.assignment-viewport {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+}
+.assignment-viewport::-webkit-scrollbar {
+  display: none;
+}
+.assignment-viewport.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .header-drop {
+    animation: none;
+  }
+}

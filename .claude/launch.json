@@ -2,17 +2,29 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "chess-landing",
+      "name": "macket",
       "runtimeExecutable": "python",
       "runtimeArgs": [
         "-m",
         "http.server",
-        "8123"
+        "8137"
       ],
-      "port": 8123
+      "cwd": "mackets/macket",
+      "port": 8137
     },
     {
-      "name": "chesslab-react",
+      "name": "macket-admin",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8138"
+      ],
+      "cwd": "mackets/macket-admin",
+      "port": 8138
+    },
+    {
+      "name": "CSD-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run",
@@ -22,8 +34,32 @@
         "5188",
         "--strictPort"
       ],
-      "cwd": "react-version",
+      "cwd": "CSD-app",
       "port": 5188
+    },
+    {
+      "name": "CSD-app-admin",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5189",
+        "--strictPort"
+      ],
+      "cwd": "CSD-app-admin",
+      "port": 5189
+    },
+    {
+      "name": "CSD-server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "cwd": "CSD-server",
+      "port": 4000
     }
   ]
 }

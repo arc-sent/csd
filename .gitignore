@@ -1,0 +1,24 @@
+# Исторические статические макеты (лендинг и старая vanilla-админка) — живут
+# локально как референс, в репозиторий не идут. Актуальные приложения — это
+# CSD-app, CSD-app-admin, CSD-server.
+mackets/
+
+# Секреты docker-compose (пароли БД, JWT_SECRET, ключи ЮKassa) — см.
+# .env.example рядом. У каждого приложения свой .env и свой .gitignore
+# (CSD-app/, CSD-app-admin/, CSD-server/) — этот файл только для корневого.
+.env
+.env.local
+
+# На случай кода/скриптов прямо в корне или в папках без своего .gitignore.
+node_modules/
+dist/
+coverage/
+*.log
+npm-debug.log*
+
+# ОС и редакторы.
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

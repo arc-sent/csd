@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  grants       Grant[]
+
+  @@map("admin_users")
+}
+
+// Покупатель (личный кабинет) — намеренно отдельная модель от AdminUser, а не
+// поле role: «это админ?» становится запросом в другую таблицу, а не булевым
+// флагом, который легко забыть проверить.
+// passwordHash nullable — под будущий вход через Google/Яндекс/VK, где своего
+// пароля у аккаунта нет. Логин по такому аккаунту обязан возвращать ту же
+// ошибку, что и неверный пароль, иначе это оракул для перебора аккаунтов.
+// email всегда в нижнем регистре: нормализуется в zod-схеме (account.validation.js)
+// до того, как его увидит сервис.
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  passwordHash String?
+  name         String?
+  // Часовой пояс IANA ("Europe/Moscow"). Нужен для серии решений: день
+  // считается по местному времени пользователя, иначе решивший в 01:00 по
+  // Москве попадает во вчерашний UTC-день и теряет серию. Пусто = UTC.
+  timeZone     String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  payments     Payment[]
+  progress     LevelProgress[]
+  achievements UserAchievement[]
+  grants       Grant[]
+
+  @@map("users")
+}
+
+// Ручная выдача доступа к заданию из админки — второй источник права доступа
+// наряду с оплатой (см. account/entitlements.service.js). Отдельная таблица, а
+// не фиктивный платёж: журнал платежей должен остаться чисто финансовым, а у
+// выдачи свои поля — кто выдал и зачем.
+//
+// Уникального индекса (userId, assignmentId) намеренно нет: строки не
+// удаляются, отзыв — это revokedAt, и история выдач сохраняется. «Есть доступ»
+// = существует строка с revokedAt: null.
+//
+// Каскад по обеим ссылкам (в отличие от Payment, который живёт через SetNull):
+// платёж — финансовый документ и должен пережить удаление задания, а выдача
+// без задания или аккаунта — мусор.
+model Grant {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  // Кто выдал. SetNull — удаление админа не должно стирать историю выдач.
+  grantedById  String?
+  grantedBy    AdminUser? @relation(fields: [grantedById], references: [id], onDelete: SetNull)
+  note         String?
+  createdAt    DateTime   @default(now())
+  revokedAt    DateTime?
+
+  @@index([userId])
+  @@index([assignmentId])
+  @@map("grants")
+}
+
+// Разблокированное достижение. Хранится, а не вычисляется на лету, ради двух
+// вещей: даты получения (её из истории решений уже не восстановить, если
+// правила достижений поменяются) и однократного показа «новое достижение»
+// (seenAt). Уникальность (userId, key) делает выдачу идемпотентной — правила
+// пересчитываются при каждом решении и на дашборде.
+model UserAchievement {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key        String
+  unlockedAt DateTime  @default(now())
+  seenAt     DateTime?
+
+  @@unique([userId, key])
+  @@index([userId])
+  @@map("user_achievements")
+}
+
+// Прогресс решения задачи. Уникальный (userId, levelId) делает запись
+// upsert'ом — эндпоинт идемпотентен при повторных отправках. Каскад с обеих
+// сторон: прогресс — производные данные, без задачи или пользователя он мусор.
+// usedSolution (смотрел ли решение до победы) нельзя восстановить задним
+// числом, поэтому пишется сразу.
+model LevelProgress {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  levelId      String
+  level        Level     @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  solved       Boolean   @default(false)
+  solvedAt     DateTime?
+  usedSolution Boolean   @default(false)
+  // Счётчик неверных ходов по задаче: копится и после решения (задачу можно
+  // перерешивать). Из него считается честная точность в кабинете.
+  mistakes     Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([userId, levelId])
+  @@index([userId])
+  @@map("level_progress")
+}
+
+// Иерархия курса: Этап -> Задание -> Задача (Level). У задачи родитель
+// необязателен (assignmentId nullable) — в базе уже могут быть независимые
+// задачи, созданные до появления этой иерархии, их нельзя сломать миграцией.
+model Stage {
+  id          String       @id @default(cuid())
+  name        String
+  description String       @default("")
+  status      String       @default("draft") // draft | published | archived
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  assignments Assignment[]
+
+  @@map("stages")
+}
+
+model Assignment {
+  id          String    @id @default(cuid())
+  stageId     String
+  stage       Stage     @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  name        String
+  description String    @default("")
+  price       Float     @default(0) // цена задания в рублях; см. Payment — оплата привязана сюда
+  status      String    @default("draft") // draft | published | archived
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  levels      Level[]
+  payments    Payment[]
+  grants      Grant[]
+
+  @@index([stageId])
+  @@map("assignments")
+}
+
+// Запись о платеже за задание через ЮKassa. yookassaId — id платежа на их
+// стороне: по нему вебхук находит запись и обновляет статус. Отвязан и от
+// Assignment, и от User через SetNull (не Cascade) — платёж финансовый
+// документ и не должен пропадать, если задание или аккаунт потом удалили.
+// Доступ к заданию выводится отсюда: succeeded-платёж с userId и есть право
+// доступа (см. account/entitlements.service.js). Второй источник права —
+// ручная выдача из админки (модель Grant).
+// email — адрес чека на момент продажи (54-ФЗ), он не меняется, даже если
+// пользователь потом сменит почту в аккаунте.
+model Payment {
+  id           String      @id @default(cuid())
+  yookassaId   String      @unique
+  assignmentId String?
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  userId       String?
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email        String
+  amount       Float
+  currency     String      @default("RUB")
+  status       String      @default("pending") // pending | succeeded | canceled
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([assignmentId])
+  @@index([userId])
+  @@map("payments")
+}
+
+// Формат полей (position/castling/steps) совпадает с тем, что уже
+// использует тренажёр на публичном сайте (script.js: LEVEL.position/steps),
+// чтобы уровни без изменений подходили и туда, и в админку.
+model Level {
+  id             String      @id @default(cuid())
+  name           String
+  description    String      @default("")
+  difficulty     String      @default("medium") // easy | medium | hard
+  category       String      @default("")
+  position       Json
+  turn           String      @default("w") // w | b
+  castling       Json
+  enPassant      String? // клетка взятия на проходе (например "e6") или null
+  halfmoveClock  Int         @default(0)
+  fullmoveNumber Int         @default(1)
+  steps          Json
+  status         String          @default("draft") // draft | published | archived
+  assignmentId   String?
+  assignment     Assignment?     @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  progress       LevelProgress[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([assignmentId])
+  @@map("levels")
+}

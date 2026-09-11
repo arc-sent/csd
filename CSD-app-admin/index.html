@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Административная панель ChessSchoolDinamik: создание и публикация шахматных задач." />
+  <title>ChessSchoolDinamik — админка</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Тема выставляется до первой отрисовки синхронным скриптом: иначе на
+       каждой загрузке будет белая вспышка. Ключ тот же, что в src/lib/theme.js.
+       Порядок скриптов в <body> трогать нельзя — он намеренный (см. ниже). -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('chesslab-admin-theme');
+        var dark = saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      } catch (e) {
+        // приватный режим/заблокированное хранилище — остаётся светлая тема
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <!-- chess.js кладём в window до DOMContentLoaded: модульные скрипты
+       выполняются после классических, но раньше инициализации админки.
+       shared/chess-rules.js — тот же UMD-файл, что использует сервер и
+       старая админка; загружается классическим <script>, а не import'ом,
+       иначе сборщик (Rollup) в production-бандле принимает UMD-обёртку за
+       CommonJS-модуль и не выставляет window.Admin. -->
+  <script type="module">
+    import { Chess } from 'chess.js';
+    window.Chess = Chess;
+  </script>
+  <script src="./chess-rules.js"></script>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

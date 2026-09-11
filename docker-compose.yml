@@ -1,0 +1,85 @@
+# Поднимает весь проект одной командой: БД + сервер + оба фронтенда.
+#   docker compose up --build
+#
+# После первого запуска (когда образы уже собраны) достаточно:
+#   docker compose up
+#
+# Порты по умолчанию: сайт — 5188, админка — 5189, API — 4000 (те же, что и
+# при обычном локальном запуске через .claude/launch.json). Переопределяются
+# через .env рядом с этим файлом — см. .env.example.
+#
+# CSD-server и CSD-app-admin используют build.context: . (корень репозитория),
+# а не свои собственные папки — обоим нужен доступ к shared/chess-rules.js
+# (общий движок шахматных правил, см. комментарии в их Dockerfile).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-chesslab}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chesslab}
+      POSTGRES_DB: ${POSTGRES_DB:-chesslab}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-chesslab} -d ${POSTGRES_DB:-chesslab}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: CSD-server/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-chesslab}:${POSTGRES_PASSWORD:-chesslab}@postgres:5432/${POSTGRES_DB:-chesslab}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
+      USER_JWT_EXPIRES_IN: ${USER_JWT_EXPIRES_IN:-30d}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@chesslab.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me-strong-password}
+      # Не задан по умолчанию — в NODE_ENV=development (см. Dockerfile) сервер
+      # и так пускает любой http://localhost:<порт>, ALLOWED_ORIGIN нужен
+      # только под реальный домен при выходе за пределы localhost.
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-}
+      STOCKFISH_PATH: /usr/games/stockfish
+      STOCKFISH_ARGS: ${STOCKFISH_ARGS:-}
+      STOCKFISH_DEFAULT_DEPTH: ${STOCKFISH_DEFAULT_DEPTH:-14}
+      STOCKFISH_MAX_DEPTH: ${STOCKFISH_MAX_DEPTH:-20}
+      STOCKFISH_MAX_MOVETIME: ${STOCKFISH_MAX_MOVETIME:-15000}
+      # ЮKassa не обязательна для локального запуска: без ключей покупка
+      # просто ответит понятной ошибкой, остальной сайт работает как обычно.
+      YOOKASSA_SHOP_ID: ${YOOKASSA_SHOP_ID:-}
+      YOOKASSA_SECRET_KEY: ${YOOKASSA_SECRET_KEY:-}
+      YOOKASSA_API_URL: ${YOOKASSA_API_URL:-https://api.yookassa.ru/v3}
+      PAYMENT_RETURN_URL: ${PAYMENT_RETURN_URL:-http://localhost:${APP_PORT:-5188}/index.html}
+      PAYMENT_SYNC_INTERVAL_MS: ${PAYMENT_SYNC_INTERVAL_MS:-120000}
+    ports:
+      - "${SERVER_PORT:-4000}:4000"
+
+  app:
+    build:
+      context: ./CSD-app
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:${SERVER_PORT:-4000}/api}
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-5188}:80"
+
+  admin:
+    build:
+      context: .
+      dockerfile: CSD-app-admin/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:${SERVER_PORT:-4000}/api}
+    restart: unless-stopped
+    ports:
+      - "${ADMIN_PORT:-5189}:80"
+
+volumes:
+  pgdata:
