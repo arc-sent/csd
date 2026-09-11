@@ -18,11 +18,19 @@ function createApp() {
   // В деве статический сервер админки может подниматься на разных портах
   // (см. .claude/launch.json) — разрешаем любой localhost, чтобы не гнаться
   // за портом руками; в проде ALLOWED_ORIGIN должен быть указан явно.
-  const allowedOrigin = process.env.ALLOWED_ORIGIN;
+  //
+  // Сайту и админке всегда нужны РАЗНЫЕ origin'ы (разные порты/поддомены), а
+  // при этом оба должны попадать в CORS одновременно — поэтому ALLOWED_ORIGIN
+  // может перечислять несколько адресов через запятую
+  // ("http://ip:5188,http://ip:5189"), а не только один.
+  const allowedOrigins = (process.env.ALLOWED_ORIGIN || '')
+    .split(',')
+    .map(value => value.trim())
+    .filter(Boolean);
   app.use(cors({
     origin(origin, callback) {
       if (!origin) return callback(null, true);
-      if (allowedOrigin && origin === allowedOrigin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
       if (process.env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
         return callback(null, true);
       }
