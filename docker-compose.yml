@@ -1,12 +1,20 @@
-# Поднимает весь проект одной командой: БД + сервер + оба фронтенда.
+# Поднимает весь проект одной командой: БД + сервер + оба фронтенда + HTTPS.
 #   docker compose up --build
 #
 # После первого запуска (когда образы уже собраны) достаточно:
 #   docker compose up
 #
-# Порты по умолчанию: сайт — 5188, админка — 5189, API — 4000 (те же, что и
-# при обычном локальном запуске через .claude/launch.json). Переопределяются
-# через .env рядом с этим файлом — см. .env.example.
+# HTTPS — через Caddy (сервис ниже): он сам получает и продлевает бесплатные
+# сертификаты Let's Encrypt для трёх доменов (APP_DOMAIN/ADMIN_DOMAIN/
+# API_DOMAIN). По умолчанию это домены sslip.io — бесплатный трюк с DNS: имя
+# вида app.31-76-46-113.sslip.io само резолвится в IP 31.76.46.113, поэтому
+# отдельно покупать домен не нужно. Появится свой домен — просто
+# переопределите эти три переменные в .env, никаких других изменений не
+# требуется.
+#
+# Порты 5188/5189/4000 (сайт/админка/API напрямую, без HTTPS) остаются
+# доступны как и раньше — HTTPS через Caddy это дополнение, а не замена.
+# Переопределяются через .env рядом с этим файлом — см. .env.example.
 #
 # CSD-server и CSD-app-admin используют build.context: . (корень репозитория),
 # а не свои собственные папки — обоим нужен доступ к shared/chess-rules.js
@@ -43,10 +51,10 @@ services:
       USER_JWT_EXPIRES_IN: ${USER_JWT_EXPIRES_IN:-30d}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@chesslab.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me-strong-password}
-      # Не задан по умолчанию — в NODE_ENV=development (см. Dockerfile) сервер
-      # и так пускает любой http://localhost:<порт>, ALLOWED_ORIGIN нужен
-      # только под реальный домен при выходе за пределы localhost.
-      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-}
+      # И прямые адреса портов (localhost и голый IP — их пускает
+      # NODE_ENV=development, см. Dockerfile), и HTTPS-домены Caddy — нужны
+      # оба одновременно, поэтому через запятую.
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-https://${APP_DOMAIN:-app.31-76-46-113.sslip.io},https://${ADMIN_DOMAIN:-admin.31-76-46-113.sslip.io}}
       STOCKFISH_PATH: /usr/games/stockfish
       STOCKFISH_ARGS: ${STOCKFISH_ARGS:-}
       STOCKFISH_DEFAULT_DEPTH: ${STOCKFISH_DEFAULT_DEPTH:-14}
@@ -57,7 +65,9 @@ services:
       YOOKASSA_SHOP_ID: ${YOOKASSA_SHOP_ID:-}
       YOOKASSA_SECRET_KEY: ${YOOKASSA_SECRET_KEY:-}
       YOOKASSA_API_URL: ${YOOKASSA_API_URL:-https://api.yookassa.ru/v3}
-      PAYMENT_RETURN_URL: ${PAYMENT_RETURN_URL:-http://localhost:${APP_PORT:-5188}/index.html}
+      # https, не http — теперь у сайта есть настоящий HTTPS-адрес (Caddy).
+      # Заодно это и есть адрес для вебхука ЮKassa: .../api/payments/webhook.
+      PAYMENT_RETURN_URL: ${PAYMENT_RETURN_URL:-https://${APP_DOMAIN:-app.31-76-46-113.sslip.io}/index.html}
       PAYMENT_SYNC_INTERVAL_MS: ${PAYMENT_SYNC_INTERVAL_MS:-120000}
     ports:
       - "${SERVER_PORT:-4000}:4000"
@@ -66,7 +76,9 @@ services:
     build:
       context: ./CSD-app
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:${SERVER_PORT:-4000}/api}
+        # https-домен Caddy, не прямой IP:порт — так сайт и с обычного порта
+        # 5188, и через HTTPS ходит в один и тот же адрес API.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://${API_DOMAIN:-api.31-76-46-113.sslip.io}/api}
     restart: unless-stopped
     ports:
       - "${APP_PORT:-5188}:80"
@@ -76,10 +88,31 @@ services:
       context: .
       dockerfile: CSD-app-admin/Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:${SERVER_PORT:-4000}/api}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://${API_DOMAIN:-api.31-76-46-113.sslip.io}/api}
     restart: unless-stopped
     ports:
       - "${ADMIN_PORT:-5189}:80"
 
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+      - admin
+      - server
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-app.31-76-46-113.sslip.io}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:-admin.31-76-46-113.sslip.io}
+      API_DOMAIN: ${API_DOMAIN:-api.31-76-46-113.sslip.io}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:
