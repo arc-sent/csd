@@ -69,6 +69,15 @@ services:
       # Заодно это и есть адрес для вебхука ЮKassa: .../api/payments/webhook.
       PAYMENT_RETURN_URL: ${PAYMENT_RETURN_URL:-https://${APP_DOMAIN:-app.31-76-46-113.sslip.io}/index.html}
       PAYMENT_SYNC_INTERVAL_MS: ${PAYMENT_SYNC_INTERVAL_MS:-120000}
+      # Без SMTP_HOST/SMTP_USER код подтверждения печатается в лог сервера
+      # (docker compose logs server), письмо не уходит — регистрация всё
+      # равно работает, см. shared/mailer.js.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-ChessSchoolDinamik <no-reply@chesslab.local>}
     ports:
       - "${SERVER_PORT:-4000}:4000"
 

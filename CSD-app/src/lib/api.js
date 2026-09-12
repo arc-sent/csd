@@ -72,6 +72,19 @@ export async function me() {
   return (await request('/account/me')).user;
 }
 
+// ---------- Подтверждение email (мягкий режим — не блокирует кабинет) ----------
+
+export async function verifyEmailCode(code) {
+  return (await request('/email-verification/verify', {
+    method: 'POST',
+    body: JSON.stringify({ code })
+  })).user;
+}
+
+export function resendVerificationCode() {
+  return request('/email-verification/resend', { method: 'POST' });
+}
+
 // ---------- Кабинет ----------
 
 export async function fetchMyAssignments() {

@@ -30,6 +30,8 @@ describe('Account: регистрация и вход', () => {
     expect(res.body.user.email).toBe(EMAIL);
     expect(res.body.user.name).toBe('Тест');
     expect(res.body.user.passwordHash).toBeUndefined();
+    // Свежая регистрация — почта ещё не подтверждена (см. email-verification.test.js).
+    expect(res.body.user.emailVerified).toBe(false);
   });
 
   it('не даёт зарегистрировать тот же email в другом регистре', async () => {

@@ -76,5 +76,18 @@ export function useAuth() {
     setStatus('unauthenticated');
   }, []);
 
-  return {status, user, authError, login, register, logout};
+  // Мягкий режим: подтверждение почты не блокирует ничего в status/маршрутах,
+  // просто обновляет user.emailVerified — рендер бейджа завязан на это поле,
+  // отдельное состояние не нужно.
+  const verifyEmail = useCallback(async code => {
+    const current = await api.verifyEmailCode(code);
+    setUser(current);
+    return current;
+  }, []);
+
+  // Возвращает результат как есть ({sent}|{retryAfterSeconds}|{alreadyVerified})
+  // — обратный отсчёт и текст ошибки рисует сам баннер, здесь только запрос.
+  const resendVerification = useCallback(() => api.resendVerificationCode(), []);
+
+  return {status, user, authError, login, register, logout, verifyEmail, resendVerification};
 }
