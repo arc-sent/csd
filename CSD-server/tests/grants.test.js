@@ -48,6 +48,9 @@ describe('Ручная выдача доступа', () => {
       .post('/api/account/register')
       .send({ email: BUYER_EMAIL, password: PASSWORD });
     buyerId = buyer.body.user.id;
+    // Кабинет теперь требует подтверждённую почту — эти тесты не про само
+    // подтверждение (см. email-verification.test.js).
+    await prisma.user.updateMany({ where: { id: { in: [userId, buyerId] } }, data: { emailVerifiedAt: new Date() } });
     await prisma.payment.create({
       data: {
         yookassaId: 'grants-test-paid',

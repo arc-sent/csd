@@ -2,6 +2,14 @@ import {useCallback, useEffect, useState} from 'react';
 import * as api from '../lib/api.js';
 import {setSessionExpiredHandler} from '../lib/authError.js';
 
+// Обязательное подтверждение почты (см. account.guard.js.requireVerifiedEmail
+// на сервере): статус после входа/регистрации зависит от emailVerified, а не
+// всегда 'authenticated'. 'unverified' — отдельное состояние, а не просто
+// флаг поверх 'authenticated': им управляет тот же App.jsx-роутинг, что и
+// 'unauthenticated'/'checking', и по нему решается, что показать в кабинете —
+// сам кабинет или экран ввода кода.
+const statusFor = user => (user.emailVerified ? 'authenticated' : 'unverified');
+
 /**
  * Состояние авторизации покупателя. Порт машины состояний из
  * CSD-app-admin/src/hooks/useAuth.js: 'checking' нужен, чтобы залогиненный
@@ -33,7 +41,7 @@ export function useAuth() {
       .me()
       .then(current => {
         setUser(current);
-        setStatus('authenticated');
+        setStatus(statusFor(current));
       })
       .catch(() => {
         api.logout();
@@ -48,7 +56,7 @@ export function useAuth() {
     try {
       const current = await api.loginAccount(credentials);
       setUser(current);
-      setStatus('authenticated');
+      setStatus(statusFor(current));
       return current;
     } catch (err) {
       setAuthError(err.message);
@@ -61,7 +69,7 @@ export function useAuth() {
     try {
       const current = await api.registerAccount(credentials);
       setUser(current);
-      setStatus('authenticated');
+      setStatus(statusFor(current));
       return current;
     } catch (err) {
       setAuthError(err.message);
@@ -76,17 +84,16 @@ export function useAuth() {
     setStatus('unauthenticated');
   }, []);
 
-  // Мягкий режим: подтверждение почты не блокирует ничего в status/маршрутах,
-  // просто обновляет user.emailVerified — рендер бейджа завязан на это поле,
-  // отдельное состояние не нужно.
   const verifyEmail = useCallback(async code => {
     const current = await api.verifyEmailCode(code);
     setUser(current);
+    setStatus(statusFor(current));
     return current;
   }, []);
 
   // Возвращает результат как есть ({sent}|{retryAfterSeconds}|{alreadyVerified})
-  // — обратный отсчёт и текст ошибки рисует сам баннер, здесь только запрос.
+  // — обратный отсчёт и текст ошибки рисует сам экран подтверждения, здесь
+  // только запрос.
   const resendVerification = useCallback(() => api.resendVerificationCode(), []);
 
   return {status, user, authError, login, register, logout, verifyEmail, resendVerification};

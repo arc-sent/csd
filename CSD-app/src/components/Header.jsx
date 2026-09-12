@@ -47,7 +47,10 @@ export function Brand({className = '', isCabinet = false}) {
 export function Header({isCabinet = false, navigate, onOpenAuth}) {
   const [open, setOpen] = useState(false);
   const {status, user} = useAuthContext();
-  const authenticated = status === 'authenticated';
+  // 'unverified' — тоже залогинен (аккаунт есть, просто почта ещё не
+  // подтверждена): шапка не должна откатываться к «Войти»/«Купить доступ»,
+  // ссылка на кабинет просто приведёт на экран подтверждения (см. App.jsx).
+  const authenticated = status === 'authenticated' || status === 'unverified';
 
   // href настоящий, чтобы работали средний клик и «открыть в новой вкладке»;
   // preventDefault только на обычном левом клике.

@@ -35,6 +35,9 @@ describe('Payments module', () => {
       .send({ email: TEST_EMAIL, password: TEST_PASSWORD });
     token = registerRes.body.token;
     userId = registerRes.body.user.id;
+    // Покупка теперь требует подтверждённую почту (чек уходит на неё) — эти
+    // тесты не про само подтверждение (см. email-verification.test.js).
+    await prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
   });
 
   afterEach(async () => {

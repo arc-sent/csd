@@ -22,6 +22,10 @@ const auth = user => ({ Authorization: `Bearer ${user.token}` });
 
 async function registerUser(app, email) {
   const res = await request(app).post('/api/account/register').send({ email, password: PASSWORD });
+  // Дашборд и кабинет теперь требуют подтверждённую почту — эти тесты не про
+  // само подтверждение (см. email-verification.test.js), поэтому подтверждаем
+  // сразу в обход письма/кода.
+  await prisma.user.update({ where: { id: res.body.user.id }, data: { emailVerifiedAt: new Date() } });
   return { id: res.body.user.id, token: res.body.token };
 }
 

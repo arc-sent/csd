@@ -220,7 +220,10 @@ export function Plans({notify}) {
   const {status} = useAuthContext();
 
   function handleBuy(assignment) {
-    if (status === 'authenticated') {
+    // 'unverified' — тоже пускаем в модалку оплаты, а не в «войдите»: аккаунт
+    // уже есть, просто сервер откажет понятной ошибкой «Подтвердите почту»
+    // (PaymentModal её и так показывает как есть, см. её catch).
+    if (status === 'authenticated' || status === 'unverified') {
       setPaymentAssignment(assignment);
       return;
     }

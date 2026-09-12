@@ -5,6 +5,7 @@ import {Audience, Benefits, HowItWorks, Plans, Reviews} from './components/Secti
 import {Demo} from './components/Demo.jsx';
 import {Faq, FinalCta, Footer} from './components/Faq.jsx';
 import {AuthModal} from './components/AuthModal.jsx';
+import {EmailVerificationGate} from './components/EmailVerificationGate.jsx';
 import {CabinetPage} from './components/cabinet/CabinetPage.jsx';
 import {AuthProvider, useAuthContext} from './context/AuthContext.jsx';
 import {ToastProvider, useToast} from './hooks/useToast.jsx';
@@ -61,6 +62,7 @@ function Shell() {
               </section>
             )}
             {status === 'unauthenticated' && <CabinetGate onOpenAuth={() => setAuthMode('login')} />}
+            {status === 'unverified' && <EmailVerificationGate />}
             {status === 'authenticated' && <CabinetPage route={route} navigate={navigate} />}
           </>
         ) : (

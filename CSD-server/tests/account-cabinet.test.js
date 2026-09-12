@@ -151,6 +151,9 @@ describe('Account: личный кабинет', () => {
     const r2 = await request(app).post('/api/account/register').send({ email: U2_EMAIL, password: PASSWORD });
     u1 = { id: r1.body.user.id, token: r1.body.token };
     u2 = { id: r2.body.user.id, token: r2.body.token };
+    // Кабинет теперь требует подтверждённую почту — эти тесты не про само
+    // подтверждение (см. email-verification.test.js).
+    await prisma.user.updateMany({ where: { id: { in: [u1.id, u2.id] } }, data: { emailVerifiedAt: new Date() } });
 
     // U1 купил A (успешно), U2 купил B; плюс у U1 неоплаченный платёж на B.
     await prisma.payment.create({

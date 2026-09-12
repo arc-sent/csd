@@ -1,6 +1,5 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {ProfileHeader} from './ProfileHeader.jsx';
-import {EmailVerificationBanner} from './EmailVerificationBanner.jsx';
 import {DashboardHero} from './DashboardHero.jsx';
 import {AchievementsCard} from './AchievementsCard.jsx';
 import {StageAssignments} from './StageAssignments.jsx';
@@ -173,7 +172,6 @@ export function CabinetPage({route, navigate}) {
         {!route.assignmentId && (
           <div className="space-y-10 sm:space-y-12">
             <ProfileHeader />
-            <EmailVerificationBanner />
 
             {dashboard && (
               <DashboardHero
