@@ -85,6 +85,31 @@ export function resendVerificationCode() {
   return request('/email-verification/resend', { method: 'POST' });
 }
 
+// ---------- Восстановление пароля (публичное, без токена) ----------
+
+export function requestPasswordReset(email) {
+  return request('/password-reset/request', {
+    method: 'POST',
+    body: JSON.stringify({ email })
+  });
+}
+
+// Возвращает {resetToken} — код проверяется и гасится сразу здесь, дальше
+// пароль меняется по токену, а не по коду повторно.
+export function verifyPasswordResetCode({ email, code }) {
+  return request('/password-reset/verify', {
+    method: 'POST',
+    body: JSON.stringify({ email, code })
+  });
+}
+
+export function confirmPasswordReset({ resetToken, newPassword }) {
+  return request('/password-reset/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ resetToken, newPassword })
+  });
+}
+
 // ---------- Кабинет ----------
 
 export async function fetchMyAssignments() {

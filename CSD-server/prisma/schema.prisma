@@ -48,6 +48,7 @@ model User {
   achievements UserAchievement[]
   grants       Grant[]
   verification EmailVerification?
+  passwordReset PasswordReset?
 
   @@map("users")
 }
@@ -73,6 +74,24 @@ model EmailVerification {
   createdAt  DateTime @default(now())
 
   @@map("email_verifications")
+}
+
+// Код восстановления пароля — та же форма, что EmailVerification (тот же
+// жизненный цикл: 15 минут, upsert при повторной отправке, счётчик попыток),
+// отдельная таблица, а не переиспользование EmailVerification, потому что это
+// разные секреты с разными последствиями компрометации и не должны делить
+// строку/жизненный цикл.
+model PasswordReset {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int      @default(0)
+  lastSentAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@map("password_resets")
 }
 
 // Ручная выдача доступа к заданию из админки — второй источник права доступа

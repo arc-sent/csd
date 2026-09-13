@@ -11,6 +11,7 @@ const publicRoutes = require('./modules/public/public.routes');
 const accountRoutes = require('./modules/account/account.routes');
 const usersRoutes = require('./modules/users/users.routes');
 const emailVerificationRoutes = require('./modules/email-verification/email-verification.routes');
+const passwordResetRoutes = require('./modules/password-reset/password-reset.routes');
 const { errorHandler } = require('./middlewares/error-handler');
 
 function createApp() {
@@ -51,6 +52,7 @@ function createApp() {
   app.use('/api/account', accountRoutes);
   app.use('/api/users', usersRoutes);
   app.use('/api/email-verification', emailVerificationRoutes);
+  app.use('/api/password-reset', passwordResetRoutes);
 
   app.use((req, res) => res.status(404).json({ error: 'Маршрут не найден' }));
   app.use(errorHandler);
