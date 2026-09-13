@@ -77,10 +77,13 @@ describe('Payments admin', () => {
   });
 
   afterAll(async () => {
-    await prisma.payment.deleteMany({ where: { assignmentId } });
+    // Голые переменные: если beforeAll упал раньше присваивания, значение
+    // остаётся undefined, а deleteMany({where:{id: undefined}}) Prisma
+    // понимает как «без фильтра» — удаляет всю таблицу целиком.
+    if (assignmentId) await prisma.payment.deleteMany({ where: { assignmentId } });
     await prisma.user.deleteMany({ where: { email: { in: [BUYER_EMAIL, OTHER_EMAIL] } } });
-    await prisma.assignment.deleteMany({ where: { id: assignmentId } });
-    await prisma.stage.deleteMany({ where: { id: stageId } });
+    if (assignmentId) await prisma.assignment.deleteMany({ where: { id: assignmentId } });
+    if (stageId) await prisma.stage.deleteMany({ where: { id: stageId } });
     await prisma.adminUser.deleteMany({ where: { email: ADMIN_EMAIL } });
     await prisma.$disconnect();
   });

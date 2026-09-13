@@ -41,7 +41,11 @@ describe('Разделение админских и пользовательс�
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({ where: { id: userId } });
+    // userId остаётся undefined, если регистрация в beforeAll упала — тогда
+    // deleteMany({where:{id: undefined}}) Prisma трактует как «без фильтра» и
+    // удаляет ВСЕХ пользователей. Явная проверка — это разница между потерей
+    // одной тестовой строки и потерей всей таблицы.
+    if (userId) await prisma.user.deleteMany({ where: { id: userId } });
     await prisma.adminUser.deleteMany({ where: { email: ADMIN_EMAIL } });
     await prisma.$disconnect();
   });

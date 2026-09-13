@@ -30,7 +30,7 @@ function getTransporter() {
   return transporter;
 }
 
-async function sendMail({ to, subject, text }) {
+async function sendMail({ to, subject, text, html }) {
   if (!isConfigured()) {
     // Дев-режим: письмо не уходит, но код виден в логе — им можно
     // пользоваться без настоящего почтового ящика.
@@ -43,7 +43,8 @@ async function sendMail({ to, subject, text }) {
       from: process.env.SMTP_FROM || 'ChessSchoolDinamik <no-reply@chesslab.local>',
       to,
       subject,
-      text
+      text,
+      html
     });
     return { delivered: true };
   } catch (err) {

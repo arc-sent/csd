@@ -44,14 +44,20 @@ describe('Payments module', () => {
     if (global.fetch && global.fetch.mockRestore) global.fetch.mockRestore();
     process.env.YOOKASSA_SHOP_ID = originalShopId;
     process.env.YOOKASSA_SECRET_KEY = originalSecretKey;
-    await prisma.payment.deleteMany({ where: { assignmentId } });
+    if (assignmentId) await prisma.payment.deleteMany({ where: { assignmentId } });
   });
 
   afterAll(async () => {
-    await prisma.payment.deleteMany({ where: { userId } });
-    await prisma.user.deleteMany({ where: { id: userId } });
-    await prisma.assignment.deleteMany({ where: { id: { in: [assignmentId, freeAssignmentId] } } });
-    await prisma.stage.deleteMany({ where: { id: stageId } });
+    // Голые переменные вместо user.id/.assignmentId: если beforeAll упал
+    // раньше присваивания, значение остаётся undefined, а
+    // deleteMany({where:{id: undefined}}) Prisma понимает как «без фильтра» —
+    // удаляет ВСЮ таблицу. Явные проверки нужны именно из-за этого.
+    if (userId) await prisma.payment.deleteMany({ where: { userId } });
+    if (userId) await prisma.user.deleteMany({ where: { id: userId } });
+    if (assignmentId || freeAssignmentId) {
+      await prisma.assignment.deleteMany({ where: { id: { in: [assignmentId, freeAssignmentId].filter(Boolean) } } });
+    }
+    if (stageId) await prisma.stage.deleteMany({ where: { id: stageId } });
     await prisma.$disconnect();
   });
 

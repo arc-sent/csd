@@ -1,8 +1,15 @@
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const bcrypt = require('bcryptjs');
 const prisma = require('../../shared/prisma');
 const { AppError } = require('../../shared/errors');
 const mailer = require('../../shared/mailer');
+
+const CODE_EMAIL_TEMPLATE = fs.readFileSync(
+  path.join(__dirname, '../../shared/email-templates/verification-code.html'),
+  'utf8'
+);
 
 const CODE_TTL_MS = 15 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
@@ -28,6 +35,12 @@ function emailBody(code) {
   );
 }
 
+// text — запасной вариант для почтовых клиентов без HTML; html — то, что
+// реально увидит подавляющее большинство получателей.
+function emailHtml(code) {
+  return CODE_EMAIL_TEMPLATE.replace(/{{CODE}}/g, code);
+}
+
 // Генерирует код, хеширует, upsert'ит строку (одна активная запись на
 // пользователя — resend полностью её перезаписывает, история не нужна) и
 // отправляет письмо. Вызывается и при регистрации, и при resend — оба места
@@ -47,7 +60,8 @@ async function createAndSendCode(userId, email) {
   await mailer.sendMail({
     to: email,
     subject: 'Код подтверждения — ChessSchoolDinamik',
-    text: emailBody(code)
+    text: emailBody(code),
+    html: emailHtml(code)
   });
 }
 
