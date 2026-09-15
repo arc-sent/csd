@@ -14,6 +14,10 @@ COPY . .
 # src/lib/api.js на случай, если переменная вообще не задана.
 ARG VITE_API_BASE_URL=http://localhost:4000/api
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+# Абсолютный адрес сайта для canonical/og:url/sitemap (см. index.html и
+# vite.config.js) — тоже инлайнится при сборке.
+ARG VITE_SITE_URL=https://app.31-76-46-113.sslip.io
+ENV VITE_SITE_URL=$VITE_SITE_URL
 RUN npm run build
 
 # Готовая статика — просто раздаём через nginx. Клиентского роутинга по путям

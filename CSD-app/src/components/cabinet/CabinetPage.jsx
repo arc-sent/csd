@@ -9,7 +9,10 @@ import {SectionIntro, container} from '../ui.jsx';
 import {Button} from '../ui.jsx';
 import {StageSwitcher} from '../StageSwitcher.jsx';
 import {PaymentModal} from '../PaymentModal.jsx';
+import {LoadingState} from '../Spinner.jsx';
+import {NotFoundPage} from '../NotFoundPage.jsx';
 import {
+  ApiError,
   fetchAssignmentLevels,
   fetchDashboard,
   fetchMyAssignments,
@@ -36,6 +39,7 @@ export function CabinetPage({route, navigate}) {
   const notify = useToast();
   const [assignments, setAssignments] = useState(null);
   const [levelsData, setLevelsData] = useState(null);
+  const [levelsNotFound, setLevelsNotFound] = useState(false);
   const [stages, setStages] = useState(null);
   const [stagesFailed, setStagesFailed] = useState(false);
   const [stageId, setStageId] = useState(null);
@@ -81,16 +85,26 @@ export function CabinetPage({route, navigate}) {
   useEffect(() => {
     if (!route.assignmentId) {
       setLevelsData(null);
+      setLevelsNotFound(false);
       return;
     }
     let cancelled = false;
     setLevelsData(null);
+    setLevelsNotFound(false);
     fetchAssignmentLevels(route.assignmentId)
       .then(data => {
         if (!cancelled) setLevelsData(data);
       })
       .catch(err => {
-        if (!cancelled) handleApiError(err, notify);
+        if (cancelled) return;
+        // 404 — задания с таким id нет (или оно не куплено): показываем
+        // страницу «не найдено», а не крутим спиннер бесконечно и не гасим
+        // это тостом, как обычную ошибку сети.
+        if (err instanceof ApiError && err.status === 404) {
+          setLevelsNotFound(true);
+        } else {
+          handleApiError(err, notify);
+        }
       });
     return () => {
       cancelled = true;
@@ -151,7 +165,16 @@ export function CabinetPage({route, navigate}) {
           />
         )}
 
-        {route.levelId && !levelsData && <p className="text-[13px] text-faint">Загружаем задачу…</p>}
+        {route.levelId && !levelsData && !levelsNotFound && <LoadingState text="Загружаем задачу…" />}
+
+        {route.assignmentId && levelsNotFound && (
+          <NotFoundPage
+            title="Такого задания не существует"
+            message="Возможно, ссылка устарела, задание сняли с публикации, или оно вам не принадлежит."
+            actionLabel="К моим заданиям"
+            onAction={goToAssignments}
+          />
+        )}
 
         {!route.levelId && route.assignmentId && levelsData && (
           <AssignmentLevels
@@ -162,8 +185,8 @@ export function CabinetPage({route, navigate}) {
           />
         )}
 
-        {!route.levelId && route.assignmentId && !levelsData && (
-          <p className="text-[13px] text-faint">Загружаем задание…</p>
+        {!route.levelId && route.assignmentId && !levelsData && !levelsNotFound && (
+          <LoadingState text="Загружаем задание…" />
         )}
 
         {/* Единый вертикальный ритм: отступы между блоками задаёт контейнер, а
@@ -185,7 +208,7 @@ export function CabinetPage({route, navigate}) {
             )}
 
             {(assignments === null || stages === null) && !stagesFailed && (
-              <p className="text-[13px] text-faint">Загружаем ваши задания…</p>
+              <LoadingState text="Загружаем ваши задания…" />
             )}
 
             {stagesFailed && (

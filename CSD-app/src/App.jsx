@@ -6,11 +6,13 @@ import {Demo} from './components/Demo.jsx';
 import {Faq, FinalCta, Footer} from './components/Faq.jsx';
 import {AuthModal} from './components/AuthModal.jsx';
 import {EmailVerificationGate} from './components/EmailVerificationGate.jsx';
+import {LoadingState} from './components/Spinner.jsx';
 import {CabinetPage} from './components/cabinet/CabinetPage.jsx';
 import {AuthProvider, useAuthContext} from './context/AuthContext.jsx';
 import {ToastProvider, useToast} from './hooks/useToast.jsx';
 import {container, sectionPad, Button} from './components/ui.jsx';
 import {useRoute} from './lib/route.js';
+import {useDocumentMeta} from './lib/seo.js';
 
 function CabinetGate({onOpenAuth}) {
   return (
@@ -42,6 +44,10 @@ function Shell() {
 
   const isCabinet = route.view === 'cabinet';
 
+  // Кабинет — личные экраны: свой <title> и noindex. Лендинг оставляет
+  // базовые title/description из index.html.
+  useDocumentMeta(isCabinet ? {title: 'Личный кабинет', noindex: true} : {});
+
   // Колонка на всю высоту экрана + растягивающийся main: иначе на коротких
   // экранах (список задач, экран решения, пустой кабинет, проверка входа)
   // подвал вставал сразу под контентом — посреди страницы. dvh, а не vh:
@@ -57,7 +63,7 @@ function Shell() {
             {status === 'checking' && (
               <section className={`bg-bg ${sectionPad}`}>
                 <div className={container}>
-                  <p className="text-[13px] text-faint">Проверяем вход…</p>
+                  <LoadingState text="Проверяем вход…" />
                 </div>
               </section>
             )}

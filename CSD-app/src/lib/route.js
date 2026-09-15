@@ -5,7 +5,10 @@ import {useCallback, useEffect, useState} from 'react';
 // не настраивать SPA-fallback. Хеш занят якорями лендинга (#plans, #faq).
 const ROUTE_EVENT = 'chesslab:route';
 
-export function readRoute(search = window.location.search) {
+// При пререндере (scripts/prerender.mjs) window нет — рендерится лендинг.
+const isBrowser = typeof window !== 'undefined';
+
+export function readRoute(search = isBrowser ? window.location.search : '') {
   const params = new URLSearchParams(search);
   return {
     view: params.get('view') === 'cabinet' ? 'cabinet' : 'landing',
@@ -15,11 +18,12 @@ export function readRoute(search = window.location.search) {
 }
 
 export function buildHref({view = 'landing', assignmentId = null, levelId = null} = {}) {
-  if (view !== 'cabinet') return window.location.pathname;
+  const pathname = isBrowser ? window.location.pathname : '/';
+  if (view !== 'cabinet') return pathname;
   const params = new URLSearchParams({view: 'cabinet'});
   if (assignmentId) params.set('assignment', assignmentId);
   if (levelId) params.set('level', levelId);
-  return `${window.location.pathname}?${params}`;
+  return `${pathname}?${params}`;
 }
 
 export function navigate(next) {

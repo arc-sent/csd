@@ -66,7 +66,7 @@ export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
   const [copies, setCopies] = useState(3);
 
   const reduceMotion = useMemo(
-    () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
+    () => (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) || false,
     []
   );
 

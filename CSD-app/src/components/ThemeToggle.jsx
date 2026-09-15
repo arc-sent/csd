@@ -1,13 +1,19 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {applyTheme, currentTheme} from '../lib/theme.js';
 
 /**
  * Переключатель темы. Состояние читается из DOM, а не из своего источника:
  * атрибут уже выставлен инлайн-скриптом в index.html до первой отрисовки,
  * и второй источник правды разошёлся бы с ним при монтировании.
+ *
+ * Читается в эффекте, а не в инициализаторе useState: HTML пререндерен
+ * (scripts/prerender.mjs) со светлой темой, и при гидрации разметка кнопки
+ * должна совпасть с ним — иначе React в проде не чинит расхождение в
+ * атрибутах, и у пользователя с тёмной темой кнопка показала бы «солнце».
  */
 export function ThemeToggle({className = ''}) {
-  const [theme, setTheme] = useState(currentTheme);
+  const [theme, setTheme] = useState('light');
+  useEffect(() => setTheme(currentTheme()), []);
   const dark = theme === 'dark';
 
   return (

@@ -96,14 +96,14 @@ export function Hero() {
         <Reveal className="max-w-[640px]">
           <div className="inline-flex items-center gap-2.5 text-muted">
             <span className="w-[7px] h-[7px] rounded-full bg-accent" />
-            <span className={label}>Платформа для шахматной тактики</span>
+            <span className={label}>Онлайн-тренажёр по шахматной тактике</span>
           </div>
           <h1 className="font-display text-[52px] sm:text-[clamp(50px,6vw,84px)] leading-[.97] tracking-[-.07em] my-[22px]">
-            Начни <em className="not-italic text-accent">видеть</em> комбинации на несколько ходов вперёд.
+            Шахматные задачи онлайн, которые учат <em className="not-italic text-accent">видеть</em> комбинации.
           </h1>
           <p className="max-w-[590px] text-base sm:text-lg text-muted leading-[1.6] mb-[30px]">
-            Решай задачи на интерактивной доске, получай проверку каждого хода и постепенно переходи
-            к более сложным уровням.
+            Тренажёр шахматной тактики в браузере: решай задачи на интерактивной доске, получай проверку
+            каждого хода и постепенно переходи к более сложным уровням.
           </p>
           <div className="flex flex-wrap items-center gap-6">
             <Button href="#plans">

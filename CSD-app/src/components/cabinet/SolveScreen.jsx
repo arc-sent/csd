@@ -1,25 +1,33 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {TrainerPanel} from '../TrainerPanel.jsx';
-import {fetchLevel, markLevelMistake, markLevelSolved} from '../../lib/api.js';
+import {ApiError, fetchLevel, markLevelMistake, markLevelSolved} from '../../lib/api.js';
 import {handleApiError} from '../../lib/authError.js';
 import {toTrainerLevel} from '../../lib/trainerLevel.js';
 import {useToast} from '../../hooks/useToast.jsx';
+import {LoadingState} from '../Spinner.jsx';
+import {NotFoundPage} from '../NotFoundPage.jsx';
 
 export function SolveScreen({levelId, siblings, onBack, onOpenLevel, onSolvedChange}) {
   const notify = useToast();
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setData(null);
     setError('');
+    setNotFound(false);
     fetchLevel(levelId)
       .then(result => {
         if (!cancelled) setData(result);
       })
       .catch(err => {
         if (cancelled) return;
+        if (err instanceof ApiError && err.status === 404) {
+          setNotFound(true);
+          return;
+        }
         setError(err.message || 'Не удалось загрузить задачу.');
         handleApiError(err, notify);
       });
@@ -54,6 +62,17 @@ export function SolveScreen({levelId, siblings, onBack, onOpenLevel, onSolvedCha
   const next = position >= 0 && position < siblings.length - 1 ? siblings[position + 1] : null;
   const current = position >= 0 ? siblings[position] : null;
 
+  if (notFound) {
+    return (
+      <NotFoundPage
+        title="Такой задачи не существует"
+        message="Возможно, ссылка устарела, или задачу сняли с публикации."
+        actionLabel="← К списку задач"
+        onAction={onBack}
+      />
+    );
+  }
+
   return (
     <>
       <button
@@ -65,7 +84,7 @@ export function SolveScreen({levelId, siblings, onBack, onOpenLevel, onSolvedCha
       </button>
 
       {error && <p className="text-[13px] text-danger">{error}</p>}
-      {!data && !error && <p className="text-[13px] text-faint">Загружаем задачу…</p>}
+      {!data && !error && <LoadingState text="Загружаем задачу…" />}
 
       {data && !data.supported && (
         <div className="rounded-[18px] border border-dashed border-line bg-paper px-6 py-10 text-center">

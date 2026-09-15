@@ -20,7 +20,7 @@ export function Audience() {
     <section className={`bg-paper ${sectionPad}`} id="audience">
       <div className={container}>
         <Reveal>
-          <SectionIntro label="Для кого" title="Тренируй именно тот навык, который нужен сейчас." />
+          <SectionIntro label="Для кого" title="Кому подходит тренажёр шахматной тактики." />
         </Reveal>
         <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
           {AUDIENCE.map(([index, icon, title, text, href, link, featured], i) => (
@@ -132,8 +132,8 @@ export function HowItWorks() {
           <SectionIntro
             split
             label="Как это работает"
-            title="Четыре шага. Один понятный цикл тренировки."
-            note="От оплаты до следующего уровня — всё происходит внутри одного сценария. Не нужно устанавливать отдельное приложение."
+            title="Как решать шахматные задачи онлайн: четыре шага."
+            note="От оплаты до следующего уровня — всё внутри одного сценария: решаешь тактические задачи прямо в браузере, без установки приложения."
           />
         </Reveal>
         <div className="grid gap-px bg-line border border-line sm:grid-cols-2 lg:grid-cols-4">
@@ -168,10 +168,10 @@ export function Benefits() {
     <section className={`bg-paper ${sectionPad}`}>
       <div className={container}>
         <Reveal className="max-w-[900px] mb-[55px]">
-          <span className={`${label} text-ink`}>Почему ChessSchoolDinamik</span>
+          <span className={`${label} text-ink`}>Почему тренажёр ChessSchoolDinamik</span>
           <h2 className={heading}>
-            Тренировка, которая показывает <em className="not-italic text-accent">процесс</em>, а не только
-            ответ.
+            Тренировка тактики, которая показывает <em className="not-italic text-accent">процесс</em>, а не
+            только ответ.
           </h2>
         </Reveal>
         <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
@@ -256,8 +256,8 @@ export function Plans({notify}) {
             split
             badge={stages.length > 0 && <StageSwitcher stages={stages} value={stageId} onChange={setStageId} />}
             label="Тарифы"
-            title="Каждое задание — отдельный вход в тренировку."
-            note="Разбор хода за ходом и мгновенная проверка. Оплата — за конкретное задание, без пакетов и подписок."
+            title="Наборы шахматных задач по темам и уровням."
+            note="Наборы шахматных задач по темам тактики: разбор хода за ходом и мгновенная проверка. Оплата — за конкретное задание, без пакетов и подписок."
           />
         </Reveal>
         {stage && stage.assignments.length > 0 && (
@@ -293,7 +293,7 @@ export function Reviews() {
       <div className={`${container} grid gap-[50px] items-start lg:grid-cols-[.85fr_1.15fr] lg:gap-20`}>
         <Reveal>
           <span className={`${label} text-ink`}>Отзывы</span>
-          <h2 className={heading}>Когда тренировка становится привычкой.</h2>
+          <h2 className={heading}>Отзывы учеников и родителей.</h2>
           <p className="text-muted text-sm leading-[1.7] pt-[30px]">
             Демонстрационные отзывы — до появления реальных кейсов их можно заменить на блок «Об авторе
             методики».
