@@ -1,22 +1,26 @@
 import { useEffect, useMemo, useState } from 'react';
 import Board from './Board.jsx';
 import { chessRules } from '../../lib/chessRules.js';
+import { advanceFen } from '../../lib/solutionNotation.js';
 import MoveLabel from './MoveLabel.jsx';
 
 // Порт buildPreviewFrames()/renderPreviewBoard() из admins/js/solution-builder.js.
 export default function PreviewPanel({ draft }) {
   const frames = useMemo(() => {
-    const result = [{ position: draft.position, move: null, kind: 'start' }];
+    const result = [{ position: draft.position, fen: chessRules.toFen(draft), move: null, kind: 'start' }];
     draft.steps.forEach(step => {
-      const afterPlayer = chessRules.applyMove(result[result.length - 1].position, step.player);
-      result.push({ position: afterPlayer, move: step.player, kind: 'player' });
+      const before = result[result.length - 1];
+      const afterPlayer = chessRules.applyMove(before.position, step.player);
+      const afterPlayerFen = advanceFen(before.fen, step.player);
+      result.push({ position: afterPlayer, fen: afterPlayerFen, move: step.player, kind: 'player' });
       if (step.reply) {
         const afterReply = chessRules.applyMove(afterPlayer, step.reply);
-        result.push({ position: afterReply, move: step.reply, kind: 'reply' });
+        const afterReplyFen = advanceFen(afterPlayerFen, step.reply);
+        result.push({ position: afterReply, fen: afterReplyFen, move: step.reply, kind: 'reply' });
       }
     });
     return result;
-  }, [draft.position, draft.steps]);
+  }, [draft.position, draft.turn, draft.castling, draft.enPassant, draft.steps]);
 
   const [cursor, setCursor] = useState(0);
   // Список шагов мог измениться (добавили/удалили ход) — держим курсор в
@@ -29,7 +33,7 @@ export default function PreviewPanel({ draft }) {
   const beforeFrame = frames[cursor - 1];
   const label = frame.kind === 'start'
     ? 'Начальная позиция'
-    : <>{frame.kind === 'player' ? 'Ученик: ' : 'Ответ: '}<MoveLabel move={frame.move} before={beforeFrame && beforeFrame.position} /></>;
+    : <>{frame.kind === 'player' ? 'Ученик: ' : 'Ответ: '}<MoveLabel move={frame.move} before={beforeFrame && beforeFrame.position} beforeFen={beforeFrame && beforeFrame.fen} /></>;
 
   return (
     <div className="preview-panel">

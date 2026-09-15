@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { request, ApiError } from '../../lib/api.js';
 import { handleApiError } from '../../lib/authError.js';
 import { chessRules } from '../../lib/chessRules.js';
+import { advanceFen } from '../../lib/solutionNotation.js';
 import MoveLabel from './MoveLabel.jsx';
 
 // Порт admins/js/engine.js — «Рассчитать лучшее решение»: показывает вариант
@@ -64,15 +65,19 @@ export default function EnginePanel({ draft, hasSteps, onAccept, notify }) {
   }
 
   let runningPosition = draft.position;
+  let runningFen = result ? chessRules.toFen(draft) : null;
   const stepRows = result ? result.steps.map((step, i) => {
     const beforePlayer = runningPosition;
+    const beforePlayerFen = runningFen;
     const beforeReply = chessRules.applyMove(beforePlayer, step.player);
+    const beforeReplyFen = advanceFen(beforePlayerFen, step.player);
     runningPosition = step.reply ? chessRules.applyMove(beforeReply, step.reply) : beforeReply;
+    runningFen = step.reply ? advanceFen(beforeReplyFen, step.reply) : beforeReplyFen;
     return (
       <div className="engine-step" key={i}>
         <span className="step-index">{String(i + 1).padStart(2, '0')}</span>
-        <span><em>Ученик</em> <MoveLabel move={step.player} before={beforePlayer} /></span>
-        <span><em>Ответ</em> {step.reply ? <MoveLabel move={step.reply} before={beforeReply} /> : '—'}</span>
+        <span><em>Ученик</em> <MoveLabel move={step.player} before={beforePlayer} beforeFen={beforePlayerFen} /></span>
+        <span><em>Ответ</em> {step.reply ? <MoveLabel move={step.reply} before={beforeReply} beforeFen={beforeReplyFen} /> : '—'}</span>
       </div>
     );
   }) : null;

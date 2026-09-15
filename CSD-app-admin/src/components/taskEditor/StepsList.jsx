@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { chessRules } from '../../lib/chessRules.js';
-import { moveToUciOrEmpty, tokensToSteps } from '../../lib/solutionNotation.js';
+import { moveToUciOrEmpty, tokensToSteps, fenChainFor } from '../../lib/solutionNotation.js';
 import MoveLabel from './MoveLabel.jsx';
 
 // Порт renderStepsList()+«Всё решение» (renderFullAlgoInput/applyFullAlgoInput)
@@ -20,6 +20,13 @@ export default function StepsList({ draft, dispatch, onEdit, onDelete, notify })
     });
     return { beforePlayer, beforeReply };
   }, [draft.position, draft.steps]);
+
+  // Та же цепочка, но в FEN — по ней MoveLabel считает настоящую нотацию
+  // (+/#/x/=/O-O), а не просто "откуда → куда".
+  const stepFens = useMemo(
+    () => fenChainFor(draft),
+    [draft.position, draft.turn, draft.castling, draft.enPassant, draft.steps]
+  );
 
   const fullAlgoString = useMemo(() => {
     const tokens = [];
@@ -97,8 +104,8 @@ export default function StepsList({ draft, dispatch, onEdit, onDelete, notify })
                 </div>
               </div>
               <div className="step-card-body">
-                <div className="step-move"><em>Ученик</em><b><MoveLabel move={step.player} before={stepPositions.beforePlayer[index]} /></b></div>
-                <div className="step-move"><em>Ответ</em><b>{step.reply ? <MoveLabel move={step.reply} before={stepPositions.beforeReply[index]} /> : '—'}</b></div>
+                <div className="step-move"><em>Ученик</em><b><MoveLabel move={step.player} before={stepPositions.beforePlayer[index]} beforeFen={stepFens.beforePlayerFen[index]} /></b></div>
+                <div className="step-move"><em>Ответ</em><b>{step.reply ? <MoveLabel move={step.reply} before={stepPositions.beforeReply[index]} beforeFen={stepFens.beforeReplyFen[index]} /> : '—'}</b></div>
               </div>
             </div>
             {index < draft.steps.length - 1 && <div className="step-arrow">↓</div>}
