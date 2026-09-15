@@ -5,8 +5,9 @@ import PreviewPanel from './PreviewPanel.jsx';
 import EnginePanel from './EnginePanel.jsx';
 import { FILES, squareName, parseSquareName } from '../../lib/board.js';
 import { chessRules } from '../../lib/chessRules.js';
-import { moveToUciOrEmpty, parseUciToken, tokensToSteps, copyMove } from '../../lib/solutionNotation.js';
+import { moveToUciOrEmpty, parseUciToken, tokensToSteps, copyMove, fenBeforeIndex, advanceFen } from '../../lib/solutionNotation.js';
 import MoveLabel from './MoveLabel.jsx';
+import ResultField from './ResultField.jsx';
 
 const SQUARE_OPTIONS = FILES.split('').flatMap(f => [8, 7, 6, 5, 4, 3, 2, 1].map(n => f + n));
 
@@ -21,9 +22,14 @@ function positionBeforeIndex(draft, index) {
 
 // Порт admins/js/solution-builder.js — конструктор решения: клики по доске,
 // ручной выбор клеток, текстовый ввод одного хода/целого решения.
-export default function SolutionBuilderView({ draft, dispatch, onBack, onNext, notify }) {
+export default function SolutionBuilderView({ draft, dispatch, onBack, onNext, onSaveDraft, onPublish, notify }) {
   const [temp, setTemp] = useState({ player: { from: null, to: null }, reply: { from: null, to: null } });
   const [skipReply, setSkipReply] = useState(false);
+  // Не поле уровня, а решение админа прямо здесь: не идти на шаг «Проверка»,
+  // а сохранить/опубликовать сразу с этого экрана. Локальный чекбокс, не
+  // draft.* — включается заново на каждое открытие редактора, а не хранится
+  // на сервере (это про то, как хочется работать сейчас, а не свойство уровня).
+  const [skipReview, setSkipReview] = useState(false);
   const [pendingField, setPendingField] = useState('player.from');
   const [editingIndex, setEditingIndex] = useState(-1);
   const [algoText, setAlgoText] = useState('');
@@ -33,6 +39,9 @@ export default function SolutionBuilderView({ draft, dispatch, onBack, onNext, n
 
   const buildPosition = positionBeforeIndex(draft, editingIndex === -1 ? draft.steps.length : editingIndex);
   const beforeReplyPosition = temp.player.from && temp.player.to ? chessRules.applyMove(buildPosition, temp.player) : buildPosition;
+  // Те же позиции, но в FEN — для настоящей нотации (+/#/x/=/O-O) в MoveLabel.
+  const buildFen = fenBeforeIndex(draft, editingIndex === -1 ? draft.steps.length : editingIndex);
+  const beforeReplyFen = temp.player.from && temp.player.to ? advanceFen(buildFen, temp.player) : buildFen;
 
   // Строка вида "e7e5 Кg1f3" для поля "Алгоритм хода" — источник и приёмник
   // одновременно, как и в оригинале (algoStringFromTemp).
@@ -194,8 +203,8 @@ export default function SolutionBuilderView({ draft, dispatch, onBack, onNext, n
 
         <div className="current-step-box">
           <div className="current-step-preview">
-            <div className="temp-move-row"><span>Ученик</span><b><MoveLabel move={temp.player} before={buildPosition} /></b></div>
-            <div className="temp-move-row"><span>Ответ</span><b>{skipReply ? 'нет (финальный ход)' : <MoveLabel move={temp.reply} before={beforeReplyPosition} />}</b></div>
+            <div className="temp-move-row"><span>Ученик</span><b><MoveLabel move={temp.player} before={buildPosition} beforeFen={buildFen} /></b></div>
+            <div className="temp-move-row"><span>Ответ</span><b>{skipReply ? 'нет (финальный ход)' : <MoveLabel move={temp.reply} before={beforeReplyPosition} beforeFen={beforeReplyFen} />}</b></div>
           </div>
           <label className="toggle-field">
             <input type="checkbox" checked={skipReply} onChange={e => { setSkipReply(e.target.checked); if (e.target.checked) setTemp(prev => ({ ...prev, reply: { from: null, to: null } })); }} />
@@ -257,9 +266,29 @@ export default function SolutionBuilderView({ draft, dispatch, onBack, onNext, n
         <EnginePanel draft={draft} hasSteps={draft.steps.length > 0} onAccept={handleAcceptEngine} notify={notify} />
         <StepsList draft={draft} dispatch={dispatch} onEdit={handleEditStep} onDelete={handleDeleteStep} notify={notify} />
         <PreviewPanel draft={draft} />
+
+        {/* Результат/оценку можно задать вручную прямо здесь, не дожидаясь
+            шага «Проверка» — там то же самое поле, то же состояние draft.result. */}
+        <div className="result-panel">
+          <span className="field-label">Результат / оценка</span>
+          <ResultField draft={draft} dispatch={dispatch} />
+        </div>
+
+        <label className="toggle-field">
+          <input type="checkbox" checked={skipReview} onChange={e => setSkipReview(e.target.checked)} />
+          Пропустить шаг «Проверка» для этого уровня — сохранять/публиковать прямо отсюда
+        </label>
+
         <div className="panel-actions editor-actions">
           <button type="button" className="panel-button ghost" onClick={onBack}>← К позиции</button>
-          <button type="button" className="panel-button dark" onClick={handleToReview}>К проверке →</button>
+          {skipReview ? (
+            <>
+              <button type="button" className="panel-button ghost" onClick={onSaveDraft}>Сохранить как черновик</button>
+              <button type="button" className="panel-button dark" onClick={onPublish}>Опубликовать</button>
+            </>
+          ) : (
+            <button type="button" className="panel-button dark" onClick={handleToReview}>К проверке →</button>
+          )}
         </div>
       </aside>
     </div>

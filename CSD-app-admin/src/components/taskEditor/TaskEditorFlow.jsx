@@ -48,11 +48,20 @@ export default function TaskEditorFlow({ assignmentId, levelId, onDone, onCancel
             <PositionEditorView draft={draft} dispatch={dispatch} onCancel={onCancel} onNext={setStep} notify={notify} />
           )}
           {step === 'solution' && (
-            <SolutionBuilderView draft={draft} dispatch={dispatch} onBack={() => setStep('position')} onNext={setStep} notify={notify} />
+            <SolutionBuilderView
+              draft={draft}
+              dispatch={dispatch}
+              onBack={() => setStep('position')}
+              onNext={setStep}
+              onSaveDraft={() => persist('draft')}
+              onPublish={() => persist('published')}
+              notify={notify}
+            />
           )}
           {step === 'review' && (
             <ReviewView
               draft={draft}
+              dispatch={dispatch}
               onEdit={() => setStep('position')}
               onSaveDraft={() => persist('draft')}
               onPublish={() => persist('published')}

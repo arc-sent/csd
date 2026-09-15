@@ -31,7 +31,7 @@ const initialCore = level => {
     wrongPending: false,
     replyPending: false,
     solutionShown: false,
-    preview: {text: level.hint, empty: true, move: null, before: null, prefix: ''},
+    preview: {text: level.hint, empty: true, move: null, before: null, beforeFen: null, prefix: ''},
     feedback: {state: 'idle', title: turnTitle(fen), note: 'Сделай первый ход алгоритма.'},
     progress: level.progress[0]
   };
@@ -108,7 +108,7 @@ export function useTrainer(level, notify, onMistake) {
             replyPending: false,
             frames: [...prev.frames, makeFrame(nextFen, reply, 'reply')],
             cursor: prev.frames.length,
-            preview: {move: reply, before: current.position, prefix: 'Соперник: ', empty: false},
+            preview: {move: reply, before: current.position, beforeFen: current.fen, prefix: 'Соперник: ', empty: false},
             feedback: {state: 'idle', title: turnTitle(nextFen), note: 'Соперник ответил. Ищи следующий ход.'}
           };
         });
@@ -149,7 +149,7 @@ export function useTrainer(level, notify, onMistake) {
           ...prev,
           frames,
           cursor: frames.length - 1,
-          preview: {move, before: position, prefix: '', empty: false}
+          preview: {move, before: position, beforeFen: frame.fen, prefix: '', empty: false}
         };
 
         if (!correct) {
@@ -167,11 +167,17 @@ export function useTrainer(level, notify, onMistake) {
 
         const stepIndex = prev.stepIndex + 1;
         if (stepIndex >= level.steps.length) {
+          // level.result — либо настоящий результат партии (1-0/0-1/1/2-1/2,
+          // мат/ничья), либо авторская оценка позиции без мата (±/∓/=,
+          // «этого достаточно, чтобы засчитать решение»). Админ проставляет
+          // его в ReviewView.jsx; не у всех задач он задан, поэтому в
+          // заголовок попадает, только если есть.
+          const title = level.result ? `Уровень пройден · ${level.result}` : 'Уровень пройден';
           return {
             ...next,
             stepIndex,
             progress: level.progress[1],
-            feedback: {state: 'success', title: 'Уровень пройден', note: level.solvedNote}
+            feedback: {state: 'success', title, note: level.solvedNote}
           };
         }
         return {
@@ -280,11 +286,12 @@ export function useTrainer(level, notify, onMistake) {
     if (drag.wasSelected) setSelected(null);
   };
 
-  const showFramePreview = (current, before) => {
+  const showFramePreview = (current, before, beforeFen) => {
     if (!current.move) return {text: 'Начальная позиция', empty: true};
     return {
       move: current.move,
       before,
+      beforeFen,
       prefix: current.kind === 'reply' ? 'Соперник: ' : '',
       empty: false
     };
@@ -298,7 +305,7 @@ export function useTrainer(level, notify, onMistake) {
       return {
         ...prev,
         cursor,
-        preview: showFramePreview(prev.frames[cursor], prev.frames[cursor - 1]?.position)
+        preview: showFramePreview(prev.frames[cursor], prev.frames[cursor - 1]?.position, prev.frames[cursor - 1]?.fen)
       };
     });
   };
@@ -335,7 +342,7 @@ export function useTrainer(level, notify, onMistake) {
         replyPending: false,
         progress: level.progress[0],
         feedback,
-        preview: showFramePreview(frames[frames.length - 1], frames[frames.length - 2]?.position)
+        preview: showFramePreview(frames[frames.length - 1], frames[frames.length - 2]?.position, frames[frames.length - 2]?.fen)
       };
     });
     notify?.('Ход отменён.');
@@ -361,18 +368,23 @@ export function useTrainer(level, notify, onMistake) {
     let fen = toFen(level);
     return level.steps.map((step, index) => {
       const beforePlayer = positionFromFen(fen);
+      const playerBeforeFen = fen;
       const afterPlayerFen = applyMove(fen, step.player);
       // Битое решение сюда не попадает (сервер такие задачи не отдаёт как
       // играбельные), но подстраховка дешевле, чем падение на пустом FEN.
-      if (!afterPlayerFen) return {index: index + 1, playerMove: step.player, playerBefore: beforePlayer};
+      if (!afterPlayerFen) {
+        return {index: index + 1, playerMove: step.player, playerBefore: beforePlayer, playerBeforeFen};
+      }
       const beforeReply = positionFromFen(afterPlayerFen);
       fen = step.reply ? applyMove(afterPlayerFen, step.reply) || afterPlayerFen : afterPlayerFen;
       return {
         index: index + 1,
         playerMove: step.player,
         playerBefore: beforePlayer,
+        playerBeforeFen,
         replyMove: step.reply,
-        replyBefore: step.reply ? beforeReply : null
+        replyBefore: step.reply ? beforeReply : null,
+        replyBeforeFen: step.reply ? afterPlayerFen : null
       };
     });
   }, [level]);

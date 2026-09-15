@@ -45,6 +45,9 @@ const levelBodySchema = z.object({
   halfmoveClock: z.number().int().min(0).optional().default(0),
   fullmoveNumber: z.number().int().min(1).optional().default(1),
   steps: z.array(stepSchema).optional().default([]),
+  // Результат партии (мат/ничья) — или, если мата нет, авторская оценка
+  // финальной позиции решения: перевес одной из сторон/равенство.
+  result: z.enum(['1-0', '0-1', '1/2-1/2', '±', '∓', '=']).nullable().optional(),
   status: z.enum(['draft', 'published', 'archived']).optional(),
   assignmentId: z.string().nullable().optional()
 });

@@ -61,14 +61,14 @@ function levelPayload(level) {
   // проставляет сам. Порт levelPayload() из admins/js/board-common.js.
   const {
     name, description, difficulty, category, position, turn, castling,
-    enPassant, halfmoveClock, fullmoveNumber, steps, status, assignmentId
+    enPassant, halfmoveClock, fullmoveNumber, steps, result, status, assignmentId
   } = level;
   return {
     name, description, difficulty, category, position, turn, castling,
     enPassant: enPassant || null,
     halfmoveClock: halfmoveClock == null ? 0 : halfmoveClock,
     fullmoveNumber: fullmoveNumber == null ? 1 : fullmoveNumber,
-    steps, status, assignmentId: assignmentId || null
+    steps, result: result || null, status, assignmentId: assignmentId || null
   };
 }
 export function upsertLevel(level) {

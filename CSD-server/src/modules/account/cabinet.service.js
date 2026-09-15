@@ -165,7 +165,8 @@ async function getLevelForUser(userId, levelId) {
       enPassant: level.enPassant,
       halfmoveClock: level.halfmoveClock,
       fullmoveNumber: level.fullmoveNumber,
-      steps: level.steps
+      steps: level.steps,
+      result: level.result
     },
     progress: own || null,
     supported: support.supported,

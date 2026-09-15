@@ -19,6 +19,9 @@ export function blankLevel(assignmentId) {
     halfmoveClock: 0,
     fullmoveNumber: 1,
     steps: [],
+    // Результат партии (1-0 / 0-1 / 1/2-1/2) — '' значит «не задан», ReviewView
+    // предлагает автоматически по матовой позиции, админ может выбрать сам.
+    result: '',
     status: 'draft',
     assignmentId: assignmentId || null
   };

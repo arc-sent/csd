@@ -281,6 +281,7 @@ model Level {
   halfmoveClock  Int         @default(0)
   fullmoveNumber Int         @default(1)
   steps          Json
+  result         String? // 1-0 | 0-1 | 1/2-1/2 | ± | ∓ | = | null (без результата) — заполняет админ в ReviewView
   status         String          @default("draft") // draft | published | archived
   assignmentId   String?
   assignment     Assignment?     @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
