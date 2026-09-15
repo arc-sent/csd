@@ -163,3 +163,24 @@ export function applyMove(fen, move) {
   }
   return chess.fen();
 }
+
+/**
+ * Стандартная алгебраическая нотация хода (SAN) — "Kf3", "exd5", "O-O",
+ * "e8=Q", "Фh5+", "Фh7#. chess.js сам расставляет x/=/+/#, вручную дублировать
+ * эту логику незачем. fen — позиция ДО хода (после хода её уже не
+ * восстановить: клетка "откуда" пуста). null, если ход не проходит
+ * (не должно случаться на уже провалидированных ходах сценария).
+ */
+export function sanFor(fen, move) {
+  const chess = new Chess(fen);
+  try {
+    const result = chess.move({
+      from: squareName(move.from[0], move.from[1]),
+      to: squareName(move.to[0], move.to[1]),
+      promotion: move.promotion || 'q'
+    });
+    return result ? result.san : null;
+  } catch (err) {
+    return null;
+  }
+}

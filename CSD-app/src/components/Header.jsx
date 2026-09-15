@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {Button, container} from './ui.jsx';
+import {container} from './ui.jsx';
 import {Avatar} from './Avatar.jsx';
 import {ThemeToggle} from './ThemeToggle.jsx';
 import {useAuthContext} from '../context/AuthContext.jsx';
@@ -86,23 +86,21 @@ export function Header({isCabinet = false, navigate, onOpenAuth}) {
             // max-sm:hidden, а не «hidden sm:inline-flex»: голый hidden спорит
             // с inline-flex из buttonBase за display на одном и том же уровне
             // каскада и проигрывает ему — кнопка была видна и на телефоне.
+            // Видна и на телефоне (без max-sm:hidden) — теперь это
+            // единственный вход в кабинет на мобильном: большую кнопку с
+            // аватаром и почтой убрали из бургер-панели ниже.
             <a
               href={cabinetHref}
               onClick={openCabinet}
               aria-label="Личный кабинет"
-              className="max-sm:hidden rounded-full transition duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-line-strong"
+              className="rounded-full transition duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-line-strong"
             >
               <Avatar email={user?.email} size={34} />
             </a>
           ) : (
-            <>
-              <button type="button" className={`${textButton} max-sm:hidden`} onClick={onOpenAuth}>
-                Войти
-              </button>
-              <Button variant="small" href={navHref('#plans', isCabinet)} className="max-sm:hidden">
-                Купить доступ <span>→</span>
-              </Button>
-            </>
+            <button type="button" className={`${textButton} max-sm:hidden`} onClick={onOpenAuth}>
+              Войти
+            </button>
           )}
 
           <ThemeToggle />
@@ -150,39 +148,19 @@ export function Header({isCabinet = false, navigate, onOpenAuth}) {
               {text}
             </a>
           ))}
-          {authenticated ? (
-            // Выход — в самом кабинете (ProfileHeader), сюда ведёт только
-            // ссылка на аккаунт, как и в десктопной шапке выше.
-            <a
-              href={cabinetHref}
-              onClick={openCabinet}
-              className="flex items-center gap-3 w-full mt-3 min-h-[52px] px-[18px] rounded-[15px] bg-invert text-invert-fg"
+          {/* Кнопка входа в кабинет (аватар+почта) убрана отсюда — в шапке
+              уже есть компактная ссылка-аватар, видная и на мобильном. */}
+          {!authenticated && (
+            <button
+              type="button"
+              className="block w-full py-3 mt-1 text-sm font-bold text-muted"
+              onClick={() => {
+                setOpen(false);
+                onOpenAuth?.();
+              }}
             >
-              <Avatar email={user?.email} size={30} />
-              <span className="text-sm font-extrabold truncate">{user?.email}</span>
-              <span className="ml-auto text-sm font-extrabold">→</span>
-            </a>
-          ) : (
-            <>
-              <Button
-                variant="dark"
-                href={navHref('#plans', isCabinet)}
-                className="w-full mt-3"
-                onClick={() => setOpen(false)}
-              >
-                Купить доступ
-              </Button>
-              <button
-                type="button"
-                className="block w-full py-3 mt-1 text-sm font-bold text-muted"
-                onClick={() => {
-                  setOpen(false);
-                  onOpenAuth?.();
-                }}
-              >
-                Войти
-              </button>
-            </>
+              Войти
+            </button>
           )}
         </div>
       )}

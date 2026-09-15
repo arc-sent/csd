@@ -81,7 +81,12 @@ export function TrainerPanel({level, notify, title, eyebrow, subtitle, onSolved,
                 {trainer.preview.empty ? (
                   trainer.preview.text
                 ) : (
-                  <MoveText move={trainer.preview.move} before={trainer.preview.before} prefix={trainer.preview.prefix} />
+                  <MoveText
+                    move={trainer.preview.move}
+                    before={trainer.preview.before}
+                    beforeFen={trainer.preview.beforeFen}
+                    prefix={trainer.preview.prefix}
+                  />
                 )}
               </div>
             </div>
@@ -110,10 +115,19 @@ export function TrainerPanel({level, notify, title, eyebrow, subtitle, onSolved,
                     {trainer.solutionLines.map(line => (
                       <Fragment key={line.index}>
                         <b>
-                          <MoveText move={line.playerMove} before={line.playerBefore} prefix={line.index + '. '} />
+                          <MoveText
+                            move={line.playerMove}
+                            before={line.playerBefore}
+                            beforeFen={line.playerBeforeFen}
+                            prefix={line.index + '. '}
+                          />
                         </b>
                         <i className="not-italic text-muted">
-                          {line.replyMove ? <MoveText move={line.replyMove} before={line.replyBefore} /> : '—'}
+                          {line.replyMove ? (
+                            <MoveText move={line.replyMove} before={line.replyBefore} beforeFen={line.replyBeforeFen} />
+                          ) : (
+                            '—'
+                          )}
                         </i>
                       </Fragment>
                     ))}

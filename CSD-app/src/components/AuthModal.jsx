@@ -1,6 +1,6 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {useAuthContext} from '../context/AuthContext.jsx';
-import {ModalShell, fieldLabelClass, inputClass, submitClass} from './ModalShell.jsx';
+import {ModalShell, fieldLabelClass, inputClass, submitClass, PasswordInput} from './ModalShell.jsx';
 import {requestPasswordReset, verifyPasswordResetCode, confirmPasswordReset} from '../lib/api.js';
 
 const tabClass = active =>
@@ -17,15 +17,31 @@ const tabClass = active =>
 // (POST /password-reset/verify) и обменян на resetToken — ввод кода и ввод
 // нового пароля не должны быть одной формой, иначе неверный код узнаётся
 // только вместе с уже введённым (и потерянным при ошибке) новым паролем.
-function ResetPasswordForm({onDone}) {
-  const [step, setStep] = useState('request'); // 'request' | 'code' | 'newPassword'
-  const [email, setEmail] = useState('');
+function ResetPasswordForm({initialEmail, autoSend, onDone}) {
+  // С «Забыли пароль?» в форме входа email уже известен — код уходит сразу,
+  // без лишнего экрана, где его пришлось бы вводить второй раз. Экран запроса
+  // email остаётся только как запасной путь (email пуст или сам код нужно
+  // запросить заново из середины флоу).
+  const skipToCode = autoSend && Boolean(initialEmail);
+  const [step, setStep] = useState(skipToCode ? 'sending' : 'request'); // 'request' | 'sending' | 'code' | 'newPassword'
+  const [email, setEmail] = useState(initialEmail || '');
   const [code, setCode] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState('');
+
+  useEffect(() => {
+    if (!skipToCode) return;
+    requestPasswordReset(initialEmail)
+      .then(() => setStep('code'))
+      .catch(err => {
+        setError(err.message || 'Не удалось отправить код. Попробуйте ещё раз.');
+        setStep('request');
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleRequest(event) {
     event.preventDefault();
@@ -80,6 +96,10 @@ function ResetPasswordForm({onDone}) {
     } catch (err) {
       setError(err.message || 'Не удалось отправить код.');
     }
+  }
+
+  if (step === 'sending') {
+    return <p className="text-[13px] text-faint">Отправляем код на {initialEmail}…</p>;
   }
 
   if (step === 'request') {
@@ -165,9 +185,8 @@ function ResetPasswordForm({onDone}) {
       <label className={fieldLabelClass} htmlFor="reset-new-password">
         Новый пароль
       </label>
-      <input
+      <PasswordInput
         id="reset-new-password"
-        type="password"
         required
         autoFocus
         minLength={8}
@@ -175,7 +194,7 @@ function ResetPasswordForm({onDone}) {
         placeholder="Не короче 8 символов"
         value={newPassword}
         onChange={event => setNewPassword(event.target.value)}
-        className={`${inputClass} mb-4`}
+        className="mb-4"
       />
 
       {error && <p className="text-[12px] text-danger mb-4">{error}</p>}
@@ -200,6 +219,7 @@ export function AuthModal({mode: initialMode = 'login', onClose, onSuccess}) {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [resetNotice, setResetNotice] = useState('');
+  const [autoSendReset, setAutoSendReset] = useState(false);
 
   const isRegister = mode === 'register';
   const isReset = mode === 'reset';
@@ -248,7 +268,7 @@ export function AuthModal({mode: initialMode = 'login', onClose, onSuccess}) {
       )}
 
       {isReset ? (
-        <ResetPasswordForm onDone={handleResetDone} />
+        <ResetPasswordForm initialEmail={email} autoSend={autoSendReset} onDone={handleResetDone} />
       ) : (
         <>
           <p className="text-[13px] leading-[1.6] text-muted mb-5">
@@ -278,21 +298,23 @@ export function AuthModal({mode: initialMode = 'login', onClose, onSuccess}) {
             <label className={fieldLabelClass} htmlFor="auth-password">
               Пароль
             </label>
-            <input
+            <PasswordInput
               id="auth-password"
-              type="password"
               required
               minLength={isRegister ? 8 : undefined}
               autoComplete={isRegister ? 'new-password' : 'current-password'}
               placeholder={isRegister ? 'Не короче 8 символов' : '••••••••'}
               value={password}
               onChange={event => setPassword(event.target.value)}
-              className={`${inputClass} mb-1.5`}
+              className="mb-1.5"
             />
             {!isRegister && (
               <button
                 type="button"
-                onClick={() => switchMode('reset')}
+                onClick={() => {
+                  setAutoSendReset(true);
+                  switchMode('reset');
+                }}
                 className="block text-[12px] font-bold text-muted hover:text-ink transition duration-200 mb-4"
               >
                 Забыли пароль?
