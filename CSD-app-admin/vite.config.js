@@ -38,5 +38,10 @@ export default defineConfig({
   plugins: [react(), chessRulesAsset()],
   base: './',
   server: { host: '127.0.0.1', port: 5189 },
-  preview: { host: '127.0.0.1', port: 5189 }
+  preview: { host: '127.0.0.1', port: 5189 },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/setupTests.js'],
+    globals: true
+  }
 });

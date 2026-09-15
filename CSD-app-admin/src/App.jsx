@@ -9,10 +9,11 @@ import AssignmentsView from './components/AssignmentsView.jsx';
 import LevelsView from './components/LevelsView.jsx';
 import PaymentsView from './components/PaymentsView.jsx';
 import UsersView from './components/UsersView.jsx';
+import ProfileView from './components/ProfileView.jsx';
 import TaskEditorFlow from './components/taskEditor/TaskEditorFlow.jsx';
 
 export default function App() {
-  const { status, loginError, login, logout } = useAuth();
+  const { status, loginError, login } = useAuth();
   const { message, notify } = useToast();
   const [view, setView] = useState('stages'); // 'stages' | 'assignments' | 'levels' | 'payments' | 'users'
   const [currentStage, setCurrentStage] = useState(null);
@@ -22,6 +23,9 @@ export default function App() {
   // Позиция→Решение→Проверка), а не вложенно внутри "Задач", иначе бы
   // .admin-main/.container задваивались и анимация смены шага не проигрывалась.
   const [taskEditor, setTaskEditor] = useState(null);
+  // Мобильное меню шапки — тот же паттерн, что в CSD-app/Header.jsx
+  // (бургер раскрывает панель с теми же разделами вместо .header-nav).
+  const [menuOpen, setMenuOpen] = useState(false);
 
   function openStage(stage) {
     setCurrentStage(stage);
@@ -46,8 +50,9 @@ export default function App() {
     setCurrentStage(null);
     setCurrentAssignment(null);
     setView(section);
+    setMenuOpen(false);
   }
-  const SECTIONS = [['stages', 'Этапы'], ['payments', 'Платежи'], ['users', 'Аккаунты']];
+  const SECTIONS = [['stages', 'Этапы'], ['payments', 'Платежи'], ['users', 'Аккаунты'], ['profile', 'Профиль']];
   // Задания и задачи — это всё ещё раздел «Этапы», вкладка должна оставаться
   // подсвеченной, пока мы внутри курса.
   const activeSection = view === 'assignments' || view === 'levels' ? 'stages' : view;
@@ -81,13 +86,42 @@ export default function App() {
             </nav>
           )}
           <div className="header-actions">
-            {status === 'authenticated' && (
-              <button type="button" className="button button-small button-dark" onClick={logout}>Выйти</button>
-            )}
             {/* Вне проверки авторизации: тему должно быть видно и на экране входа. */}
             <ThemeToggle />
+
+            {/* Бургер — только на мобильном (см. .nav-toggle в index.css) и
+                только после входа: разделов/выхода до логина всё равно нет. */}
+            {status === 'authenticated' && (
+              <button
+                type="button"
+                className="nav-toggle"
+                aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen(v => !v)}
+              >
+                <span className={'nav-toggle-bar' + (menuOpen ? ' bar-1-open' : '')} />
+                <span className={'nav-toggle-bar' + (menuOpen ? ' bar-2-open' : '')} />
+                <span className={'nav-toggle-bar' + (menuOpen ? ' bar-3-open' : '')} />
+              </button>
+            )}
           </div>
         </div>
+
+        {status === 'authenticated' && menuOpen && (
+          <div className="container nav-mobile-panel">
+            {SECTIONS.map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                className={'nav-mobile-link' + (activeSection === id ? ' active' : '')}
+                aria-current={activeSection === id ? 'page' : undefined}
+                onClick={() => openSection(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       {status === 'unauthenticated' && <LoginView onLogin={login} error={loginError} />}
@@ -115,6 +149,7 @@ export default function App() {
                   )}
                   {view === 'payments' && <PaymentsView notify={notify} />}
                   {view === 'users' && <UsersView notify={notify} />}
+                  {view === 'profile' && <ProfileView notify={notify} />}
                   {view === 'levels' && currentAssignment && (
                     <LevelsView
                       assignment={currentAssignment}

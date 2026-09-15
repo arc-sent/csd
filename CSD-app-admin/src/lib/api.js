@@ -69,6 +69,34 @@ export function logout() {
   clearToken();
 }
 
+// ---------- Аккаунт админа: смена пароля/email ----------
+
+export function changePassword(newPassword) {
+  return request('/auth/password', { method: 'PUT', body: JSON.stringify({ newPassword }) });
+}
+
+export function requestEmailChange(newEmail) {
+  return request('/auth/email/request', { method: 'POST', body: JSON.stringify({ newEmail }) });
+}
+
+export async function verifyEmailChange(code) {
+  return (await request('/auth/email/verify', { method: 'POST', body: JSON.stringify({ code }) })).admin;
+}
+
 export function isAuthenticated() {
   return Boolean(getToken());
+}
+
+// ---------- Восстановление пароля до входа (публичное, без токена) ----------
+
+export function requestPasswordReset(email) {
+  return request('/auth/password-reset/request', { method: 'POST', body: JSON.stringify({ email }) });
+}
+
+export function verifyPasswordResetCode(email, code) {
+  return request('/auth/password-reset/verify', { method: 'POST', body: JSON.stringify({ email, code }) });
+}
+
+export function confirmPasswordReset(resetToken, newPassword) {
+  return request('/auth/password-reset/confirm', { method: 'POST', body: JSON.stringify({ resetToken, newPassword }) });
 }
