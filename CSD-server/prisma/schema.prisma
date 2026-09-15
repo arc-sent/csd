@@ -14,8 +14,45 @@ model AdminUser {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   grants       Grant[]
+  emailChange  AdminEmailChange?
+  passwordReset AdminPasswordReset?
 
   @@map("admin_users")
+}
+
+// Код подтверждения смены email админа — та же форма и жизненный цикл, что у
+// EmailVerification/PasswordReset (15 минут, upsert при повторной отправке,
+// счётчик попыток). newEmail хранится тут же (не в AdminUser) — пока код не
+// подтверждён, реальный email админа не должен меняться.
+model AdminEmailChange {
+  id         String    @id @default(cuid())
+  adminId    String    @unique
+  admin      AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  newEmail   String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  lastSentAt DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+
+  @@map("admin_email_changes")
+}
+
+// Восстановление пароля админа до входа — форма и жизненный цикл те же, что
+// у AdminEmailChange/PasswordReset (сайт), но публичный доступ (без
+// authGuard): до входа админ ещё не аутентифицирован, поэтому здесь адрес
+// известен только по email из формы, а не из токена.
+model AdminPasswordReset {
+  id         String    @id @default(cuid())
+  adminId    String    @unique
+  admin      AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  lastSentAt DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+
+  @@map("admin_password_resets")
 }
 
 // Покупатель (личный кабинет) — намеренно отдельная модель от AdminUser, а не
