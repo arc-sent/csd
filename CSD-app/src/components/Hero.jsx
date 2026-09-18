@@ -2,6 +2,7 @@ import {Board, BoardFrame} from './Board.jsx';
 import {Marquee} from './Marquee.jsx';
 import {Reveal} from './Reveal.jsx';
 import {Button, container, label} from './ui.jsx';
+import {CourseDescription} from './CourseDescription.jsx';
 import {LEVEL} from '../data/level.js';
 
 const panelButton =
@@ -99,12 +100,9 @@ export function Hero() {
             <span className={label}>Онлайн-тренажёр по шахматной тактике</span>
           </div>
           <h1 className="font-display text-[52px] sm:text-[clamp(50px,6vw,84px)] leading-[.97] tracking-[-.07em] my-[22px]">
-            Шахматные задачи онлайн, которые учат <em className="not-italic text-accent">видеть</em> комбинации.
+            Начни <em className="not-italic text-accent">видеть</em> комбинации на несколько ходов вперёд.
           </h1>
-          <p className="max-w-[590px] text-base sm:text-lg text-muted leading-[1.6] mb-[30px]">
-            Тренажёр шахматной тактики в браузере: решай задачи на интерактивной доске, получай проверку
-            каждого хода и постепенно переходи к более сложным уровням.
-          </p>
+          <CourseDescription />
           <div className="flex flex-wrap items-center gap-6">
             <Button href="#plans">
               Начать решать <span>↗</span>

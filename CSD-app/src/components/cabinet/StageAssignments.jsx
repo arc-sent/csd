@@ -121,7 +121,10 @@ export function StageAssignments({stageName, assignments, owned, stats, badge, o
 
   return (
     <>
-      <Reveal>
+      {/* relative z-30: Reveal создаёт собственный слой (opacity/transform), и
+          без явного z-index следующие блоки (плитки, сетка карточек — тоже
+          Reveal/transform) перекрывали выпадающий список этапов, обрезая его. */}
+      <Reveal className="relative z-30">
         <SectionIntro
           badge={badge}
           // Когда есть переключатель, он и работает подписью секции: этап

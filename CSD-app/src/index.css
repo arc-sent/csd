@@ -427,7 +427,26 @@ body {
   user-select: none;
 }
 
+/* Пульсация кнопки выбора этапа — намёк, что на ней можно переключаться.
+   Сама кнопка то растёт, то сжимается; StageSwitcher снимает класс после
+   первого открытия. */
+@keyframes stage-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.045);
+  }
+}
+.stage-pulse {
+  animation: stage-pulse 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .stage-pulse {
+    animation: none;
+  }
   .marquee-track {
     animation: none;
   }

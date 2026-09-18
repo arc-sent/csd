@@ -206,6 +206,15 @@ export function Benefits() {
   );
 }
 
+// Скидка за этап целиком относительно суммы цен его заданий, в целых
+// процентах; 0 — скидки нет. Правило то же, что в админке
+// (CSD-app-admin lib/format.js stageDiscountPercent) — держать синхронно.
+function stageDiscountPercent(stage) {
+  const total = stage.assignments.reduce((sum, a) => sum + a.price, 0);
+  if (!(stage.price > 0) || !(total > 0) || stage.price >= total) return 0;
+  return Math.round(((total - stage.price) / total) * 100);
+}
+
 export function Plans({notify}) {
   // Этапы/задания больше не зашиты в код — тянутся из реальной админки
   // (CSD-server/prisma: Stage -> Assignment -> Level) через публичную витрину
@@ -214,21 +223,26 @@ export function Plans({notify}) {
   const [stageId, setStageId] = useState(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [paymentAssignment, setPaymentAssignment] = useState(null);
-  // Задание, ради которого попросили войти: после успешного входа покупка
-  // продолжается сама, клик не теряется.
-  const [pendingAssignment, setPendingAssignment] = useState(null);
+  const [paymentStage, setPaymentStage] = useState(null);
+  // Покупка (задание или этап), ради которой попросили войти: после
+  // успешного входа она продолжается сама, клик не теряется. {kind, item}.
+  const [pendingPurchase, setPendingPurchase] = useState(null);
   const {status} = useAuthContext();
 
-  function handleBuy(assignment) {
+  function startPurchase(kind, item) {
     // 'unverified' — тоже пускаем в модалку оплаты, а не в «войдите»: аккаунт
     // уже есть, просто сервер откажет понятной ошибкой «Подтвердите почту»
     // (PaymentModal её и так показывает как есть, см. её catch).
     if (status === 'authenticated' || status === 'unverified') {
-      setPaymentAssignment(assignment);
+      if (kind === 'stage') setPaymentStage(item);
+      else setPaymentAssignment(item);
       return;
     }
-    setPendingAssignment(assignment);
+    setPendingPurchase({kind, item});
   }
+
+  const handleBuy = assignment => startPurchase('assignment', assignment);
+  const handleBuyStage = stage => startPurchase('stage', stage);
 
   useEffect(() => {
     let cancelled = false;
@@ -251,13 +265,39 @@ export function Plans({notify}) {
   return (
     <section className={`bg-bg ${sectionPad}`} id="plans">
       <div className={container}>
-        <Reveal>
+        {/* relative z-30 — чтобы выпадающий список этапов не уходил под карусель
+            ниже (у Reveal свой слой из-за transform/opacity). */}
+        <Reveal className="relative z-30">
           <SectionIntro
             split
-            badge={stages.length > 0 && <StageSwitcher stages={stages} value={stageId} onChange={setStageId} />}
+            badge={
+              stages.length > 0 && (
+                <div className="mb-3">
+                <div className="flex flex-col items-stretch gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
+                  {/* pulse — только когда этапов больше одного: с одним переключать нечего. */}
+                  <StageSwitcher stages={stages} value={stageId} onChange={setStageId} pulse={stages.length > 1} />
+                  {/* price: 0 — покупка этапом выключена в админке, кнопку не показываем. */}
+                  {stage && stage.price > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleBuyStage(stage)}
+                      className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-accent text-on-accent text-[11px] font-extrabold uppercase tracking-[.06em] px-3.5 py-[7px] shadow-[0_8px_18px_rgba(255,107,45,.22)] transition duration-200 hover:-translate-y-0.5"
+                    >
+                      Купить этап целиком · {stage.price.toLocaleString('ru-RU')} ₽
+                      {stageDiscountPercent(stage) > 0 && (
+                        <span className="rounded-full bg-on-accent text-accent px-2 py-[2px] text-[10px]">
+                          −{stageDiscountPercent(stage)}%
+                        </span>
+                      )}
+                    </button>
+                  )}
+                </div>
+                </div>
+              )
+            }
             label="Тарифы"
             title="Наборы шахматных задач по темам и уровням."
-            note="Наборы шахматных задач по темам тактики: разбор хода за ходом и мгновенная проверка. Оплата — за конкретное задание, без пакетов и подписок."
+            note="Наборы шахматных задач по темам тактики: разбор хода за ходом и мгновенная проверка. Задания продаются поштучно, а весь этап целиком — со скидкой."
           />
         </Reveal>
         {stage && stage.assignments.length > 0 && (
@@ -268,13 +308,15 @@ export function Plans({notify}) {
         {loadFailed && <p className="text-sm text-muted">Не удалось загрузить тарифы — попробуйте обновить страницу.</p>}
       </div>
       <PaymentModal assignment={paymentAssignment} onClose={() => setPaymentAssignment(null)} />
-      {pendingAssignment && (
+      <PaymentModal stage={paymentStage} onClose={() => setPaymentStage(null)} />
+      {pendingPurchase && (
         <AuthModal
           mode="register"
-          onClose={() => setPendingAssignment(null)}
+          onClose={() => setPendingPurchase(null)}
           onSuccess={() => {
-            setPaymentAssignment(pendingAssignment);
-            setPendingAssignment(null);
+            if (pendingPurchase.kind === 'stage') setPaymentStage(pendingPurchase.item);
+            else setPaymentAssignment(pendingPurchase.item);
+            setPendingPurchase(null);
           }}
         />
       )}

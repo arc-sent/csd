@@ -2,7 +2,7 @@ import {useCallback, useEffect, useState} from 'react';
 
 // Маршрут в query-параметрах, а не в пути: сборка идёт с base:'./' под обычный
 // статический хостинг, где /cabinet вернёт 404 при обновлении страницы, если
-// не настраивать SPA-fallback. Хеш занят якорями лендинга (#plans, #faq).
+// не настраивать SPA-fallback. Хеш занят якорями лендинга (#plans, #reviews).
 const ROUTE_EVENT = 'chesslab:route';
 
 // При пререндере (scripts/prerender.mjs) window нет — рендерится лендинг.

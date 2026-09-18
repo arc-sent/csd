@@ -18,6 +18,10 @@ function LevelRow({level, onOpen}) {
       </span>
       <div className="min-w-0 flex-1">
         <h3 className="font-display text-[16px] leading-[1.2] tracking-[-.02em] truncate">{level.name}</h3>
+        {/* Краткое название задачи (дебют/тема) — та же роль, что у subtitle
+            карточки в разделе «Интерфейс» лендинга. truncate — чтобы длинный
+            текст не растягивал строку и не ломал раскладку карточки. */}
+        {level.description && <p className="text-[11px] text-faint mt-0.5 truncate">{level.description}</p>}
         <p className="text-[11px] text-faint mt-0.5">
           {DIFFICULTY[level.difficulty] || level.difficulty}
           {level.category ? ` · ${level.category}` : ''}

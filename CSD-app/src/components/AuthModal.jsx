@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react';
 import {useAuthContext} from '../context/AuthContext.jsx';
 import {ModalShell, fieldLabelClass, inputClass, submitClass, PasswordInput} from './ModalShell.jsx';
+import {TermsModal} from './TermsModal.jsx';
 import {requestPasswordReset, verifyPasswordResetCode, confirmPasswordReset} from '../lib/api.js';
 
 const tabClass = active =>
@@ -220,6 +221,9 @@ export function AuthModal({mode: initialMode = 'login', onClose, onSuccess}) {
   const [submitting, setSubmitting] = useState(false);
   const [resetNotice, setResetNotice] = useState('');
   const [autoSendReset, setAutoSendReset] = useState(false);
+  // Соглашение показывается перед формой регистрации и принимается заново при
+  // каждом открытии окна — принятие не «запоминается» надолго.
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const isRegister = mode === 'register';
   const isReset = mode === 'reset';
@@ -248,6 +252,16 @@ export function AuthModal({mode: initialMode = 'login', onClose, onSuccess}) {
     setPassword('');
     setResetNotice('Пароль изменён — войдите с новым паролем.');
     setMode('login');
+  }
+
+  if (isRegister && !termsAccepted) {
+    return (
+      <TermsModal
+        onAccept={() => setTermsAccepted(true)}
+        onClose={onClose}
+        onDecline={() => switchMode('login')}
+      />
+    );
   }
 
   return (

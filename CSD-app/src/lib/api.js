@@ -157,9 +157,11 @@ export function markAchievementsSeen() {
 // ---------- Оплата ----------
 // email не передаётся: сервер берёт почту для чека из аккаунта покупателя.
 
-export function createPayment({ assignmentId }) {
+// Ровно один из двух параметров — оплата задания или этапа целиком
+// (см. CSD-server/src/modules/payments/payments.validation.js).
+export function createPayment({ assignmentId, stageId }) {
   return request('/payments/create', {
     method: 'POST',
-    body: JSON.stringify({ assignmentId })
+    body: JSON.stringify({ assignmentId, stageId })
   });
 }

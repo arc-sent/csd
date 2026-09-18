@@ -147,7 +147,7 @@ export function CabinetPage({route, navigate}) {
 
   const stageSwitcher =
     stages && stages.length > 1 && stage ? (
-      <StageSwitcher stages={stages} value={stage.id} onChange={setStageId} />
+      <StageSwitcher stages={stages} value={stage.id} onChange={setStageId} pulse />
     ) : null;
 
   // Отступ сверху меньше секционного (74/104px): у лендинга это воздух между
@@ -237,7 +237,7 @@ export function CabinetPage({route, navigate}) {
                   />
                 </div>
               ) : (
-                <div>
+                <div className="relative z-30">
                   <SectionIntro
                     badge={stageSwitcher}
                     label={stageSwitcher ? undefined : stage ? stage.name : 'Личный кабинет'}

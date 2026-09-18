@@ -7,8 +7,11 @@ import {useEffect, useRef, useState} from 'react';
  * Этапов со временем станет больше (добавляются через админку), поэтому
  * переключатель принимает произвольный список, а не завязан на количество.
  */
-export function StageSwitcher({stages, value, onChange}) {
+export function StageSwitcher({stages, value, onChange, pulse = false}) {
   const [open, setOpen] = useState(false);
+  // Пульсация — намёк «сюда можно нажать»; после первого открытия он уже
+  // не нужен и только раздражал бы.
+  const [discovered, setDiscovered] = useState(false);
   const rootRef = useRef(null);
   const currentIndex = Math.max(0, stages.findIndex(stage => stage.id === value));
   const current = stages[currentIndex] ?? stages[0];
@@ -30,16 +33,19 @@ export function StageSwitcher({stages, value, onChange}) {
   }, [open]);
 
   return (
-    <div ref={rootRef} className="relative inline-block mr-5">
+    <div ref={rootRef} className="relative block min-w-0 sm:inline-block sm:mr-5">
       <button
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={() => {
+          setDiscovered(true);
+          setOpen(o => !o);
+        }}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="inline-flex items-center gap-2.5 rounded-full bg-accent-soft text-accent-strong text-[11px] font-extrabold uppercase tracking-[.06em] pl-[11px] pr-3 py-[7px] border border-transparent transition duration-200 hover:border-accent-strong/30"
+        className={`flex w-full sm:inline-flex sm:w-auto max-w-full items-center gap-2.5 rounded-full bg-accent-soft text-accent-strong text-[11px] font-extrabold uppercase tracking-[.06em] pl-[11px] pr-3 py-[7px] border border-transparent transition duration-200 hover:border-accent-strong/30 ${pulse && !discovered ? 'stage-pulse' : ''}`}
       >
         <span className="w-[7px] h-[7px] rounded-full bg-accent" />
-        <span>
+        <span className="min-w-0 flex-1 truncate text-left">
           Этап {currentIndex + 1} · {current.name}
         </span>
         <span className={`text-[9px] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>▾</span>
@@ -48,7 +54,7 @@ export function StageSwitcher({stages, value, onChange}) {
         <ul
           role="listbox"
           aria-label="Выбор этапа"
-          className="absolute left-0 top-[calc(100%+8px)] z-20 m-0 min-w-[230px] list-none rounded-2xl border border-line bg-surface p-1.5 shadow-[0_18px_45px_rgba(18,19,17,.14)]"
+          className="absolute left-0 right-0 sm:right-auto top-[calc(100%+8px)] z-20 m-0 sm:min-w-[230px] list-none rounded-2xl border border-line bg-surface p-1.5 shadow-[0_18px_45px_rgba(18,19,17,.14)]"
         >
           {stages.map((stage, stageIndex) => (
             <li

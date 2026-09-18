@@ -3,7 +3,7 @@ import {Header} from './components/Header.jsx';
 import {Hero} from './components/Hero.jsx';
 import {Audience, Benefits, HowItWorks, Plans, Reviews} from './components/Sections.jsx';
 import {Demo} from './components/Demo.jsx';
-import {Faq, FinalCta, Footer} from './components/Faq.jsx';
+import {FinalCta, Footer} from './components/Faq.jsx';
 import {AuthModal} from './components/AuthModal.jsx';
 import {EmailVerificationGate} from './components/EmailVerificationGate.jsx';
 import {LoadingState} from './components/Spinner.jsx';
@@ -82,7 +82,6 @@ function Shell() {
                 неавторизованный: так не теряется задание, на которое кликнули. */}
             <Plans notify={notify} />
             <Reviews />
-            <Faq />
             <FinalCta />
           </>
         )}

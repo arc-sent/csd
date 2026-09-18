@@ -5,25 +5,29 @@ import {navigate} from '../lib/route.js';
 import {ModalShell, submitClass} from './ModalShell.jsx';
 
 /**
- * Модалка «оплатить задание». Почта для чека (54-ФЗ) берётся из аккаунта —
- * сервер email от клиента не принимает, поэтому поля ввода здесь нет.
- * После создания платежа уводим на страницу оплаты ЮKassa; подтверждение
- * обрабатывает вебхук на сервере, он же открывает доступ к заданию.
+ * Модалка «оплатить задание» — или, если передан `stage` вместо `assignment`,
+ * «купить этап целиком» (см. Plans.jsx: «Купить этап целиком»). Почта для
+ * чека (54-ФЗ) берётся из аккаунта — сервер email от клиента не принимает,
+ * поэтому поля ввода здесь нет. После создания платежа уводим на страницу
+ * оплаты ЮKassa; подтверждение обрабатывает вебхук на сервере, он же
+ * открывает доступ (к заданию или сразу ко всем заданиям этапа).
  */
-export function PaymentModal({assignment, onClose}) {
+export function PaymentModal({assignment, stage, onClose}) {
   const {user} = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [alreadyBought, setAlreadyBought] = useState(false);
 
-  if (!assignment) return null;
+  const item = stage || assignment;
+  if (!item) return null;
+  const isStage = Boolean(stage);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const result = await createPayment({assignmentId: assignment.id});
+      const result = await createPayment(isStage ? {stageId: item.id} : {assignmentId: item.id});
       if (!result?.confirmationUrl) throw new Error('ЮKassa не вернула ссылку на оплату.');
       window.location.href = result.confirmationUrl;
     } catch (err) {
@@ -38,27 +42,28 @@ export function PaymentModal({assignment, onClose}) {
 
   return (
     <ModalShell
-      eyebrow="Оплата задания"
-      title={assignment.name}
-      ariaLabel={`Оплата задания «${assignment.name}»`}
+      eyebrow={isStage ? 'Оплата этапа' : 'Оплата задания'}
+      title={item.name}
+      ariaLabel={`Оплата ${isStage ? 'этапа' : 'задания'} «${item.name}»`}
       onClose={onClose}
     >
       <div className="flex items-baseline gap-1.5 mb-5">
-        <b className="font-display text-[26px] tracking-[-.04em]">{assignment.price.toLocaleString('ru-RU')} ₽</b>
-        <small className="text-[10px] text-faint">/ задание</small>
+        <b className="font-display text-[26px] tracking-[-.04em]">{item.price.toLocaleString('ru-RU')} ₽</b>
+        <small className="text-[10px] text-faint">{isStage ? '/ этап целиком' : '/ задание'}</small>
       </div>
 
       {alreadyBought ? (
         <>
           <p className="text-[13px] leading-[1.6] text-muted mb-4">
-            Это задание уже куплено — оно ждёт вас в личном кабинете.
+            {isStage ? 'Этот этап уже куплен' : 'Это задание уже куплено'} — он{isStage ? '' : 'о'} ждёт вас в личном
+            кабинете.
           </p>
           <button
             type="button"
             className={submitClass}
             onClick={() => {
               onClose();
-              navigate({view: 'cabinet', assignmentId: assignment.id});
+              navigate(isStage ? {view: 'cabinet'} : {view: 'cabinet', assignmentId: item.id});
             }}
           >
             Открыть в кабинете
@@ -70,7 +75,9 @@ export function PaymentModal({assignment, onClose}) {
             Чек придёт на <b className="text-ink">{user?.email}</b>
           </p>
           <p className="text-[11px] text-faint mb-4">
-            После оплаты задание появится в личном кабинете.
+            {isStage
+              ? 'После оплаты все задания этапа появятся в личном кабинете.'
+              : 'После оплаты задание появится в личном кабинете.'}
           </p>
 
           {error && <p className="text-[12px] text-danger mb-4">{error}</p>}

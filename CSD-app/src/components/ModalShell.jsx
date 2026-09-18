@@ -2,7 +2,7 @@ import {useState} from 'react';
 
 // Общая оболочка модалок (оплата, вход) — оверлей, панель, шапка с крестиком.
 // Стили те же, что были в PaymentModal, просто теперь в одном месте.
-export function ModalShell({eyebrow, title, ariaLabel, onClose, children}) {
+export function ModalShell({eyebrow, title, ariaLabel, onClose, children, wide = false}) {
   return (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-5 bg-scrim/55 backdrop-blur-[2px]"
@@ -12,7 +12,7 @@ export function ModalShell({eyebrow, title, ariaLabel, onClose, children}) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[420px] rounded-[22px] bg-surface border border-line p-6 sm:p-7 shadow-[0_30px_70px_rgba(18,19,17,.25)]"
+        className={`w-full ${wide ? 'max-w-[640px]' : 'max-w-[420px]'} rounded-[22px] bg-surface border border-line p-6 sm:p-7 shadow-[0_30px_70px_rgba(18,19,17,.25)]`}
         onClick={event => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 mb-5">
