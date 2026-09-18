@@ -10,6 +10,7 @@ async function listStages() {
     select: {
       id: true,
       name: true,
+      price: true,
       assignments: {
         where: { status: 'published' },
         orderBy: { createdAt: 'asc' },
@@ -26,6 +27,9 @@ async function listStages() {
   return stages.map(stage => ({
     id: stage.id,
     name: stage.name,
+    // 0 — покупка этапом целиком выключена, витрина сама решает не
+    // показывать кнопку «Купить этап целиком» (см. Plans.jsx/StagePurchase).
+    price: stage.price,
     assignments: stage.assignments.map(assignment => ({
       id: assignment.id,
       name: assignment.name,

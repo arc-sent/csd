@@ -4,6 +4,7 @@ async function createHandler(req, res, next) {
   try {
     const payment = await paymentsService.createPayment({
       assignmentId: req.body.assignmentId,
+      stageId: req.body.stageId,
       userId: req.user.sub
     });
     res.status(201).json(payment);

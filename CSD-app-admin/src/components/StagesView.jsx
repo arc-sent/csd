@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as storage from '../lib/storage.js';
 import { handleApiError } from '../lib/authError.js';
-import { STATUS_LABEL, formatDate } from '../lib/format.js';
+import { STATUS_LABEL, formatDate, formatPrice, stageDiscountPercent } from '../lib/format.js';
 import EntityListView from './EntityListView.jsx';
 import EntityForm from './EntityForm.jsx';
 
@@ -12,6 +12,7 @@ export default function StagesView({ notify, onOpenStage }) {
   const [editing, setEditing] = useState(null); // null = список, {} = создание, {...} = редактирование
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
+  const [formPrice, setFormPrice] = useState(0);
 
   async function reload() {
     try {
@@ -36,11 +37,13 @@ export default function StagesView({ notify, onOpenStage }) {
     setEditing({});
     setFormName('');
     setFormDescription('');
+    setFormPrice(0);
   }
   function openEdit(stage) {
     setEditing(stage);
     setFormName(stage.name);
     setFormDescription(stage.description);
+    setFormPrice(stage.price || 0);
   }
   function closeForm() {
     setEditing(null);
@@ -53,6 +56,7 @@ export default function StagesView({ notify, onOpenStage }) {
     stage.id = editing.id || null;
     stage.name = name;
     stage.description = formDescription.trim();
+    stage.price = Math.max(0, Number(formPrice) || 0);
     try {
       await storage.upsertStage(stage);
       notify(editing.id ? 'Этап обновлён.' : 'Этап создан.');
@@ -88,6 +92,9 @@ export default function StagesView({ notify, onOpenStage }) {
 
   if (editing) {
     const count = editing._count ? editing._count.assignments : 0;
+    const total = editing.assignmentsTotal || 0;
+    const priceNum = Number(formPrice) || 0;
+    const discount = stageDiscountPercent(priceNum, total);
     return (
       <EntityForm
         sectionLabel="Курс"
@@ -102,6 +109,18 @@ export default function StagesView({ notify, onOpenStage }) {
           <label className="field-label" htmlFor="stage-form-description">Описание</label>
           <textarea id="stage-form-description" className="admin-input entity-form-input" placeholder="Необязательно"
             value={formDescription} onChange={e => setFormDescription(e.target.value)} />
+          <label className="field-label" htmlFor="stage-form-price">Цена этапа целиком, ₽</label>
+          <input type="number" id="stage-form-price" className="admin-input entity-form-input" min="0" step="0.01"
+            value={formPrice} onChange={e => setFormPrice(e.target.value)} />
+          <p className="level-card-desc">
+            {priceNum <= 0
+              ? 'Покупка этапа целиком выключена (цена 0) — задания продаются только поштучно.'
+              : total <= 0
+                ? 'В этапе нет опубликованных заданий с ценой — скидку посчитать не с чем.'
+                : `Сумма опубликованных заданий: ${formatPrice(total)}. ${
+                    discount > 0 ? `Скидка за этап целиком: −${discount}%.` : 'Цена не ниже суммы заданий — скидки нет.'
+                  }`}
+          </p>
         </>}
         preview={
           <article className={'level-card entity-card status-' + (editing.status || 'draft')}>
@@ -111,7 +130,11 @@ export default function StagesView({ notify, onOpenStage }) {
                 <span className={'status-pill status-' + (editing.status || 'draft')}>{STATUS_LABEL[editing.status || 'draft']}</span>
               </div>
               <p className="level-card-desc">{formDescription.trim() || 'Без описания'}</p>
-              <div className="level-card-meta"><span>Заданий: {count}</span></div>
+              <div className="level-card-meta">
+                <span>Заданий: {count}</span>
+                <span>Целиком: {priceNum > 0 ? formatPrice(priceNum) : 'не продаётся'}</span>
+                {discount > 0 && <span>Скидка: −{discount}%</span>}
+              </div>
             </div>
           </article>
         }
@@ -140,6 +163,7 @@ export default function StagesView({ notify, onOpenStage }) {
       emptyText="Этапов пока нет. Нажмите «Создать этап», чтобы добавить первый."
       renderCard={stage => {
         const count = stage._count ? stage._count.assignments : 0;
+        const discount = stageDiscountPercent(stage.price, stage.assignmentsTotal);
         return (
           <article key={stage.id} className={'level-card entity-card status-' + stage.status}>
             <div className="level-card-body">
@@ -150,6 +174,8 @@ export default function StagesView({ notify, onOpenStage }) {
               <p className="level-card-desc">{stage.description || 'Без описания'}</p>
               <div className="level-card-meta">
                 <span>Заданий: {count}</span>
+                <span>Целиком: {stage.price > 0 ? formatPrice(stage.price) : 'не продаётся'}</span>
+                {discount > 0 && <span>Скидка: −{discount}%</span>}
                 <span>Изменён: {formatDate(stage.updatedAt)}</span>
               </div>
               <div className="level-card-actions">

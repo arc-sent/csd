@@ -9,8 +9,8 @@ export function getStage(id) {
   return request('/stages/' + id);
 }
 function stagePayload(stage) {
-  const { name, description, status } = stage;
-  return { name, description, status };
+  const { name, description, price, status } = stage;
+  return { name, description, price, status };
 }
 export function upsertStage(stage) {
   if (stage.id) {
@@ -106,10 +106,12 @@ export function loadUsers({ q } = {}) {
 export function getUser(id) {
   return request('/users/' + id);
 }
-export function grantAssignment(userId, { assignmentId, note }) {
+// Ровно одно из assignmentId/stageId. Для этапа сервер возвращает
+// { granted, skipped }: сколько заданий выдано и сколько уже было у аккаунта.
+export function grantAssignment(userId, { assignmentId, stageId, note }) {
   return request('/users/' + userId + '/grants', {
     method: 'POST',
-    body: JSON.stringify({ assignmentId, note: note || undefined })
+    body: JSON.stringify({ assignmentId, stageId, note: note || undefined })
   });
 }
 export function revokeGrant(userId, grantId) {
@@ -117,7 +119,7 @@ export function revokeGrant(userId, grantId) {
 }
 
 export function blankStage() {
-  return { id: null, name: '', description: '', status: 'draft' };
+  return { id: null, name: '', description: '', price: 0, status: 'draft' };
 }
 export function blankAssignment(stageId) {
   return { id: null, stageId: stageId || null, name: '', description: '', price: 1200, status: 'draft' };

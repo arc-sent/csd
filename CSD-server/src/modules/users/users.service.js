@@ -86,6 +86,35 @@ async function grantAssignment(userId, { assignmentId, note }, adminId) {
   });
 }
 
+// Выдача этапа целиком — по выдаче на каждое опубликованное задание этапа,
+// которого у аккаунта ещё нет (купленные и уже выданные пропускаются). Отдельной
+// «выдачи этапа» в модели нет намеренно: доступ остаётся поштучным, каждое
+// задание можно отозвать отдельно, а проверка права (entitlements) не
+// усложняется. Задания, опубликованные в этап позже, автоматически не
+// добавляются — их можно выдать повторной выдачей этапа.
+async function grantStage(userId, { stageId, note }, adminId) {
+  const [user, stage] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { id: true } }),
+    prisma.stage.findUnique({
+      where: { id: stageId },
+      select: { name: true, assignments: { where: { status: 'published' }, select: { id: true } } }
+    })
+  ]);
+  if (!user) throw new AppError(404, 'Аккаунт не найден');
+  if (!stage) throw new AppError(404, 'Этап не найден');
+  if (stage.assignments.length === 0) throw new AppError(400, 'В этапе нет опубликованных заданий');
+
+  const owned = await Promise.all(stage.assignments.map(a => entitlements.ownsAssignment(userId, a.id)));
+  const missing = stage.assignments.filter((_, i) => !owned[i]);
+  if (missing.length === 0) throw new AppError(409, 'У аккаунта уже есть доступ ко всем заданиям этапа');
+
+  const stageNote = `Этап «${stage.name}»` + (note ? ` — ${note}` : '');
+  await prisma.grant.createMany({
+    data: missing.map(a => ({ userId, assignmentId: a.id, note: stageNote, grantedById: adminId || null }))
+  });
+  return { granted: missing.length, skipped: stage.assignments.length - missing.length };
+}
+
 // Отзыв — проставление revokedAt, а не удаление строки: история выдач должна
 // сохраняться. Купленный доступ отзыв выдачи не трогает — он идёт от платежа.
 async function revokeGrant(userId, grantId) {
@@ -98,4 +127,4 @@ async function revokeGrant(userId, grantId) {
   await prisma.grant.update({ where: { id: grantId }, data: { revokedAt: new Date() } });
 }
 
-module.exports = { list, getById, grantAssignment, revokeGrant };
+module.exports = { list, getById, grantAssignment, grantStage, revokeGrant };

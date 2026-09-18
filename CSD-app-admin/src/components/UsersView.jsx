@@ -75,7 +75,10 @@ export default function UsersView({ notify }) {
 function UserCard({ userId, notify, onBack }) {
   const [user, setUser] = useState(null);
   const [assignments, setAssignments] = useState([]);
+  const [stages, setStages] = useState([]);
+  const [mode, setMode] = useState('assignment'); // 'assignment' | 'stage'
   const [assignmentId, setAssignmentId] = useState('');
+  const [stageId, setStageId] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -90,15 +93,25 @@ function UserCard({ userId, notify, onBack }) {
   useEffect(() => {
     reload();
     storage.loadAssignments().then(setAssignments).catch(() => {});
+    storage.loadStages().then(setStages).catch(() => {});
   }, [userId]);
 
   async function grant() {
-    if (!assignmentId) { notify('Выберите задание.'); return; }
+    const isStage = mode === 'stage';
+    if (isStage ? !stageId : !assignmentId) { notify(isStage ? 'Выберите этап.' : 'Выберите задание.'); return; }
     setBusy(true);
     try {
-      await storage.grantAssignment(userId, { assignmentId, note: note.trim() });
-      notify('Доступ выдан.');
+      const result = await storage.grantAssignment(
+        userId,
+        isStage ? { stageId, note: note.trim() } : { assignmentId, note: note.trim() }
+      );
+      if (isStage) {
+        notify(`Этап выдан: открыто заданий — ${result.granted}` + (result.skipped ? `, уже было — ${result.skipped}.` : '.'));
+      } else {
+        notify('Доступ выдан.');
+      }
       setAssignmentId('');
+      setStageId('');
       setNote('');
       await reload();
     } catch (err) {
@@ -136,6 +149,13 @@ function UserCard({ userId, notify, onBack }) {
   // всё равно откажет (409), незачем предлагать это в списке.
   const ownedIds = new Set(user.access.map(a => a.assignment.id));
   const grantable = assignments.filter(a => !ownedIds.has(a.id));
+  // Этапы, где есть хоть одно опубликованное задание, которого у аккаунта ещё
+  // нет: выдавать этап, где всё уже открыто (или нечего открывать), сервер
+  // откажет.
+  const grantableStages = stages.filter(s =>
+    assignments.some(a => a.stageId === s.id && a.status === 'published' && !ownedIds.has(a.id))
+  );
+  const isStageMode = mode === 'stage';
 
   return (
     <div className="entity-form-screen">
@@ -178,17 +198,31 @@ function UserCard({ userId, notify, onBack }) {
         <div className="entity-form-preview">
           <span className="field-label">Выдать доступ вручную</span>
           <div className="grant-form">
-            <select className="admin-input" value={assignmentId} onChange={e => setAssignmentId(e.target.value)}>
-              <option value="">Выберите задание…</option>
-              {grantable.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            <select className="admin-input" value={mode} onChange={e => setMode(e.target.value)}>
+              <option value="assignment">Одно задание</option>
+              <option value="stage">Этап целиком</option>
             </select>
+            {isStageMode ? (
+              <select className="admin-input" value={stageId} onChange={e => setStageId(e.target.value)}>
+                <option value="">Выберите этап…</option>
+                {grantableStages.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            ) : (
+              <select className="admin-input" value={assignmentId} onChange={e => setAssignmentId(e.target.value)}>
+                <option value="">Выберите задание…</option>
+                {grantable.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+            )}
             <input type="text" className="admin-input" placeholder="Зачем выдали (необязательно)"
               value={note} onChange={e => setNote(e.target.value)} />
-            <button type="button" className="panel-button dark" disabled={busy || !assignmentId} onClick={grant}>
+            <button type="button" className="panel-button dark"
+              disabled={busy || (isStageMode ? !stageId : !assignmentId)} onClick={grant}>
               Выдать доступ
             </button>
             <p className="grant-form-hint">
-              Выданное задание сразу появится в кабинете ученика, оплата не потребуется.
+              {isStageMode
+                ? 'Откроются все опубликованные задания этапа, которых у аккаунта ещё нет. Каждое можно отозвать отдельно.'
+                : 'Выданное задание сразу появится в кабинете ученика, оплата не потребуется.'}
             </p>
           </div>
         </div>

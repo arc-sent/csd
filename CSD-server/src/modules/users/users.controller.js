@@ -20,7 +20,9 @@ async function getHandler(req, res, next) {
 async function grantHandler(req, res, next) {
   try {
     // req.admin.sub кладёт authGuard — фиксируем, кто выдал доступ.
-    const grant = await usersService.grantAssignment(req.params.id, req.body, req.admin.sub);
+    const grant = req.body.stageId
+      ? await usersService.grantStage(req.params.id, req.body, req.admin.sub)
+      : await usersService.grantAssignment(req.params.id, req.body, req.admin.sub);
     res.status(201).json(grant);
   } catch (err) {
     next(err);

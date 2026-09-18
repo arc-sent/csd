@@ -211,10 +211,16 @@ model Stage {
   id          String       @id @default(cuid())
   name        String
   description String       @default("")
+  // Цена этапа целиком в рублях. 0 — покупка этапом выключена (кнопка на
+  // витрине не показывается), задания при этом всё равно продаются поштучно.
+  // Не выводится из суммы цен заданий: админ сам решает, какую скидку дать
+  // за пакет — так же, как Assignment.price не выводится из цены задач.
+  price       Float        @default(0)
   status      String       @default("draft") // draft | published | archived
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   assignments Assignment[]
+  payments    Payment[]
 
   @@map("stages")
 }
@@ -249,8 +255,14 @@ model Assignment {
 model Payment {
   id           String      @id @default(cuid())
   yookassaId   String      @unique
+  // Ровно одно из двух: платёж либо за одно задание, либо за этап целиком
+  // (см. payments.service.js createPayment) — оба nullable и SetNull по той
+  // же причине, что и раньше: финансовый документ переживает удаление того,
+  // что купили.
   assignmentId String?
   assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  stageId      String?
+  stage        Stage?      @relation(fields: [stageId], references: [id], onDelete: SetNull)
   userId       String?
   user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   email        String
@@ -261,6 +273,7 @@ model Payment {
   updatedAt    DateTime    @updatedAt
 
   @@index([assignmentId])
+  @@index([stageId])
   @@index([userId])
   @@map("payments")
 }

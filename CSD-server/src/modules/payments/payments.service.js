@@ -27,11 +27,17 @@ function authHeader(shopId, secretKey) {
   return 'Basic ' + Buffer.from(`${shopId}:${secretKey}`).toString('base64');
 }
 
-async function createPayment({ assignmentId, userId }) {
-  const assignment = await prisma.assignment.findUnique({ where: { id: assignmentId } });
-  if (!assignment) throw new AppError(404, 'Задание не найдено');
-  if (!assignment.price || assignment.price <= 0) {
-    throw new AppError(400, 'У задания не указана цена — оплата не требуется.');
+// Покупка задания и покупка этапа целиком — один и тот же сценарий с разным
+// источником цены/описания/проверки владения, поэтому общая часть (создание
+// платежа в ЮKassa и записи Payment) вынесена сюда. target — либо
+// {kind: 'assignment', row}, либо {kind: 'stage', row}.
+async function createPaymentForTarget(target, userId) {
+  const { row, kind } = target;
+  if (!row.price || row.price <= 0) {
+    throw new AppError(
+      400,
+      kind === 'stage' ? 'У этапа не указана цена — покупка целиком выключена.' : 'У задания не указана цена — оплата не требуется.'
+    );
   }
 
   // Покупка только из-под аккаунта: платёж сразу привязывается к userId, из
@@ -41,8 +47,10 @@ async function createPayment({ assignmentId, userId }) {
   if (!user) throw new AppError(401, 'Требуется авторизация');
   const email = user.email;
 
-  if (await entitlements.ownsAssignment(userId, assignmentId)) {
-    throw new AppError(409, 'Задание уже куплено');
+  const alreadyOwned =
+    kind === 'stage' ? await entitlements.ownsStage(userId, row.id) : await entitlements.ownsAssignment(userId, row.id);
+  if (alreadyOwned) {
+    throw new AppError(409, kind === 'stage' ? 'Этап уже куплен' : 'Задание уже куплено');
   }
 
   const { shopId, secretKey, apiUrl, returnUrl } = getYookassaConfig();
@@ -55,7 +63,9 @@ async function createPayment({ assignmentId, userId }) {
     throw new AppError(400, 'Для формирования чека нужен email покупателя.');
   }
 
-  const amount = formatAmount(assignment.price);
+  const amount = formatAmount(row.price);
+  const label = kind === 'stage' ? `этапа «${row.name}»` : `задания «${row.name}»`;
+  const description = `Оплата ${label}`;
 
   const res = await fetch(`${apiUrl}/payments`, {
     method: 'POST',
@@ -68,14 +78,14 @@ async function createPayment({ assignmentId, userId }) {
       amount: { value: amount, currency: 'RUB' },
       capture: true,
       confirmation: { type: 'redirect', return_url: returnUrl },
-      description: `Оплата задания «${assignment.name}»`,
-      metadata: { assignmentId, userId, email },
+      description,
+      metadata: { [kind === 'stage' ? 'stageId' : 'assignmentId']: row.id, userId, email },
       // vat_code:1 — «без НДС» (обычный дефолт для ИП на УСН/самозанятых);
       // поправить на нужный код, если налоговый режим другой.
       receipt: {
         customer: { email },
         items: [{
-          description: `Оплата задания «${assignment.name}»`.slice(0, 128),
+          description: description.slice(0, 128),
           quantity: '1.00',
           amount: { value: amount, currency: 'RUB' },
           vat_code: 1,
@@ -96,10 +106,11 @@ async function createPayment({ assignmentId, userId }) {
   await prisma.payment.create({
     data: {
       yookassaId: body.id,
-      assignmentId,
+      assignmentId: kind === 'assignment' ? row.id : null,
+      stageId: kind === 'stage' ? row.id : null,
       userId,
       email,
-      amount: assignment.price,
+      amount: row.price,
       status: body.status || 'pending'
     }
   });
@@ -109,6 +120,17 @@ async function createPayment({ assignmentId, userId }) {
     status: body.status,
     confirmationUrl: body.confirmation && body.confirmation.confirmation_url
   };
+}
+
+async function createPayment({ assignmentId, stageId, userId }) {
+  if (stageId) {
+    const stage = await prisma.stage.findUnique({ where: { id: stageId } });
+    if (!stage) throw new AppError(404, 'Этап не найден');
+    return createPaymentForTarget({ kind: 'stage', row: stage }, userId);
+  }
+  const assignment = await prisma.assignment.findUnique({ where: { id: assignmentId } });
+  if (!assignment) throw new AppError(404, 'Задание не найдено');
+  return createPaymentForTarget({ kind: 'assignment', row: assignment }, userId);
 }
 
 // Актуальный статус платежа из первых рук: авторизованный запрос нашими же
@@ -194,9 +216,10 @@ const PAYMENT_CARD = {
   status: true,
   createdAt: true,
   updatedAt: true,
-  // Задание и аккаунт отвязываются через SetNull — оба могут быть null у
-  // старого платежа, интерфейс показывает это как «удалено».
+  // Задание, этап и аккаунт отвязываются через SetNull — все могут быть null
+  // у старого платежа, интерфейс показывает это как «удалено».
   assignment: { select: { id: true, name: true } },
+  stage: { select: { id: true, name: true } },
   user: { select: { id: true, email: true } }
 };
 
