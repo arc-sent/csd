@@ -358,10 +358,13 @@ textarea.admin-input{min-height:76px;padding:10px 14px;resize:vertical}
 .entity-card.status-published::before{background:#3fa35a}
 .entity-card.status-archived::before{background:#d2542f}
 .entity-card .level-card-body{padding:22px 24px 20px;gap:6px}
-.entity-card .level-card-top h3{font-size:20px}
-.entity-card .level-card-desc{font-size:13px;min-height:0}
-.entity-card .level-card-meta{font-size:11px;color:var(--muted)}
-.entity-card .level-card-actions{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.entity-card .level-card-body{flex:1}
+/* Название и описание — в одну строку с многоточием: длинный текст не растягивает
+   карточку и не двигает кнопки, все карточки в сетке остаются одного размера. */
+.entity-card .level-card-top h3{font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entity-card .level-card-desc{font-size:13px;min-height:0;-webkit-line-clamp:1}
+.entity-card .level-card-meta{font-size:11px;color:var(--muted);margin-bottom:16px}
+.entity-card .level-card-actions{margin-top:auto;padding-top:16px;border-top:1px solid var(--line)}
 .entity-card .level-card-actions [data-action="open"]{flex:1 1 100%;min-height:42px;font-size:11px}
 /* Редактировать/Опубликовать/Удалить растягиваем поровну на всю ширину
    карточки — раньше кнопки были по ширине текста, оставляя пустое место. */
