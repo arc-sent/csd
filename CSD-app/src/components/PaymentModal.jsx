@@ -4,14 +4,6 @@ import {useAuthContext} from '../context/AuthContext.jsx';
 import {navigate} from '../lib/route.js';
 import {ModalShell, submitClass} from './ModalShell.jsx';
 
-/**
- * Модалка «оплатить задание» — или, если передан `stage` вместо `assignment`,
- * «купить этап целиком» (см. Plans.jsx: «Купить этап целиком»). Почта для
- * чека (54-ФЗ) берётся из аккаунта — сервер email от клиента не принимает,
- * поэтому поля ввода здесь нет. После создания платежа уводим на страницу
- * оплаты ЮKassa; подтверждение обрабатывает вебхук на сервере, он же
- * открывает доступ (к заданию или сразу ко всем заданиям этапа).
- */
 export function PaymentModal({assignment, stage, onClose}) {
   const {user} = useAuthContext();
   const [loading, setLoading] = useState(false);

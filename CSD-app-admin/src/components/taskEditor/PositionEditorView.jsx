@@ -11,8 +11,6 @@ const DIFFICULTY_OPTIONS = [
 ];
 const CATEGORY_SUGGESTIONS = ['Тактика', 'Мат', 'Дебют', 'Миттельшпиль', 'Эндшпиль'];
 
-// Лёгкая структурная проверка FEN (8 горизонталей, ровно 8 клеток в каждой,
-// известные буквы фигур) — порт parseFenSafe() из admins/js/position-editor.js.
 function parseFenSafe(raw) {
   const trimmed = raw.trim();
   if (!trimmed) return { error: 'Введите FEN-строку.' };
@@ -44,9 +42,6 @@ export default function PositionEditorView({ draft, dispatch, onCancel, onNext, 
   const [validation, setValidation] = useState('');
   const validationRef = useRef(null);
 
-  // Авто-высота "Описания" — растёт под текст вместо фиксированных 3 строк
-  // с ручным resize-уголком (как в старой админке). Пересчитываем и при
-  // programmatic-смене (загрузка существующего уровня), и на каждый ввод.
   useEffect(() => {
     const el = descriptionRef.current;
     if (!el) return;
@@ -54,17 +49,12 @@ export default function PositionEditorView({ draft, dispatch, onCancel, onNext, 
     el.style.height = el.scrollHeight + 'px';
   }, [draft.description]);
 
-  // Живая FEN-синхронизация — показывает текущую позицию, пока поле не в
-  // фокусе (иначе перебивало бы то, что админ печатает).
   useEffect(() => {
     if (fenFocused) return;
     setFenText(chessRules.toFen(draft));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft.position, draft.turn, draft.castling, draft.enPassant, draft.halfmoveClock, draft.fullmoveNumber, fenFocused]);
 
-  // Рокировка живо блокируется тем, что реально возможно на доске — и,
-  // в отличие от оригинала (где это откладывалось до Done), сразу поправляет
-  // draft.castling, если король/ладья уже не на исходной клетке.
   const possibleCastling = useMemo(
     () => chessRules.sanitizeCastling(draft.position, { wOO: true, wOOO: true, bOO: true, bOOO: true }).castling,
     [draft.position]
@@ -82,9 +72,6 @@ export default function PositionEditorView({ draft, dispatch, onCancel, onNext, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [possibleCastling]);
 
-  // Список клеток взятия на проходе — только реально возможные для текущей
-  // расстановки/очереди хода; если сохранённое значение больше не подходит,
-  // сбрасывается.
   const enPassantTargets = useMemo(
     () => chessRules.enPassantTargets(draft.position, draft.turn),
     [draft.position, draft.turn]
@@ -145,9 +132,6 @@ export default function PositionEditorView({ draft, dispatch, onCancel, onNext, 
     const next = orientation === 'white' ? 'black' : 'white';
     setOrientation(next);
     setSelectedSquare(null);
-    // Сторона, развёрнутая к админу (внизу доски), — это та, что ходит
-    // первой: доска повёрнута к белым (обычный вид) — ход белых; повёрнута
-    // к чёрным — ход чёрных.
     dispatch({ type: 'SET_TURN', turn: next === 'white' ? 'w' : 'b' });
   }
 

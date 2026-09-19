@@ -1,6 +1,3 @@
-// Общая полноэкранная форма создания/редактирования (Этап/Задание) — порт
-// .entity-form-screen/.entity-form-layout из admins/index.html: поля слева,
-// живой предпросмотр карточки справа.
 export default function EntityForm({
   sectionLabel,
   title,

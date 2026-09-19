@@ -4,19 +4,12 @@ import { ApiError } from '../lib/api.js';
 import { handleApiError } from '../lib/authError.js';
 import PasswordInput from './PasswordInput.jsx';
 
-// Смена пароля и email администратора — одна форма, одна кнопка (как
-// модалка регистрации на сайте: email + пароль в одной форме, один сабмит),
-// а не два раздельных мини-флоу с двумя кнопками. Пароль меняется сразу, без
-// кода; email, если указан, требует подтверждения кодом на НОВЫЙ адрес — та
-// же проверка, что и email-verification на сайте (см.
-// CSD-server/src/modules/auth/auth.service.js). Пока код не подтверждён,
-// форма показывает только поле кода — тоже одно поле, одна кнопка.
 export default function ProfileView({ notify }) {
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [code, setCode] = useState('');
-  const [step, setStep] = useState('form'); // 'form' | 'code'
+  const [step, setStep] = useState('form');
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);

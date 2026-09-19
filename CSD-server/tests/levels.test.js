@@ -23,9 +23,6 @@ function samplePayload(overrides = {}) {
     position,
     turn: 'w',
     castling: { wOO: true, wOOO: true, bOO: true, bOOO: true },
-    // Белый король e1-f1: ходит сторона, чей сейчас ход (turn: 'w') —
-    // предыдущая фикстура (e8-f8) двигала чёрного короля при ходе белых и
-    // делала уровень неиграбельным, хоть и легальным по позиции.
     steps: [{ player: { from: [7, 4], to: [7, 5] }, reply: null }],
     ...overrides
   };
@@ -126,9 +123,9 @@ describe('Levels module', () => {
 
   it('отклоняет нелегальную позицию — шах стороне, которая не ходит', async () => {
     const position = emptyBoard();
-    position[7][4] = '♔'; // e1
-    position[0][4] = '♚'; // e8
-    position[6][4] = '♕'; // e2 — бьёт чёрного короля при ходе белых
+    position[7][4] = '♔';
+    position[0][4] = '♚';
+    position[6][4] = '♕';
     const res = await request(app)
       .post('/api/levels')
       .set('Authorization', `Bearer ${token}`)
@@ -150,9 +147,9 @@ describe('Levels module', () => {
 
   it('сохраняет права на рокировку очищенными от невозможных', async () => {
     const position = emptyBoard();
-    position[7][4] = '♔'; // e1
-    position[7][7] = '♖'; // h1 — подтверждает только белую короткую
-    position[0][4] = '♚'; // e8
+    position[7][4] = '♔';
+    position[7][7] = '♖';
+    position[0][4] = '♚';
     const res = await request(app)
       .post('/api/levels')
       .set('Authorization', `Bearer ${token}`)
@@ -184,9 +181,9 @@ describe('Levels module', () => {
 
   it('принимает и сохраняет легальную клетку взятия на проходе', async () => {
     const position = emptyBoard();
-    position[7][4] = '♔'; // e1
-    position[0][4] = '♚'; // e8
-    position[3][4] = '♟'; // e5 — только что прошла на два поля
+    position[7][4] = '♔';
+    position[0][4] = '♚';
+    position[3][4] = '♟';
     const res = await request(app)
       .post('/api/levels')
       .set('Authorization', `Bearer ${token}`)
@@ -200,7 +197,7 @@ describe('Levels module', () => {
     const position = emptyBoard();
     position[7][4] = '♔';
     position[0][4] = '♚';
-    position[3][4] = '♟'; // e5, но заявляем клетку d6, где пешки нет
+    position[3][4] = '♟';
     const res = await request(app)
       .post('/api/levels')
       .set('Authorization', `Bearer ${token}`)
@@ -277,13 +274,11 @@ describe('Levels module', () => {
 
   it('не даёт опубликовать задачу через PATCH /:id/status, если очередь хода не совпадает с решением', async () => {
     const position = emptyBoard();
-    position[7][4] = '♔'; // e1
-    position[0][4] = '♚'; // e8
+    position[7][4] = '♔';
+    position[0][4] = '♚';
     const bad = samplePayload({
       position,
       turn: 'w',
-      // Первый ход решения двигает чёрного короля, хотя сейчас ход белых —
-      // ровно дефект из «Конь-камикадзе».
       steps: [{ player: { from: [0, 4], to: [0, 5] }, reply: null }]
     });
 
@@ -291,7 +286,7 @@ describe('Levels module', () => {
       .post('/api/levels')
       .set('Authorization', `Bearer ${token}`)
       .send(bad);
-    expect(created.status).toBe(201); // черновиком сохранить можно — блокируется только публикация
+    expect(created.status).toBe(201);
     expect(created.body.playability).toEqual({
       supported: false,
       reason: 'Очередь хода в задаче не совпадает с решением'
@@ -308,7 +303,7 @@ describe('Levels module', () => {
     const check = await request(app)
       .get(`/api/levels/${created.body.id}`)
       .set('Authorization', `Bearer ${token}`);
-    expect(check.body.status).toBe('draft'); // статус не поменялся
+    expect(check.body.status).toBe('draft');
   });
 
   it('не даёт создать уровень сразу со статусом published, если решение нелегально', async () => {
@@ -331,7 +326,7 @@ describe('Levels module', () => {
     const created = await request(app)
       .post('/api/levels')
       .set('Authorization', `Bearer ${token}`)
-      .send(samplePayload({ steps: [] })); // черновик без решения
+      .send(samplePayload({ steps: [] }));
     expect(created.status).toBe(201);
     createdIds.push(created.body.id);
 
@@ -356,8 +351,6 @@ describe('Levels module', () => {
   });
 
   it('удаляет уровень и после этого отдаёт 404', async () => {
-    // Забираем именно тот id, который удаляем, чтобы afterAll не потерял
-    // остальные созданные записи.
     const id = createdIds.shift();
     const del = await request(app)
       .delete(`/api/levels/${id}`)

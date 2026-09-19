@@ -5,8 +5,6 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Пароль обязателен')
 });
 
-// max(72) — bcrypt молча обрезает пароль на 72 байтах, тот же приём, что и
-// в account.validation.js/password-reset.validation.js.
 const changePasswordSchema = z.object({
   newPassword: z.string().min(8, 'Пароль должен быть не короче 8 символов').max(72, 'Пароль слишком длинный')
 });

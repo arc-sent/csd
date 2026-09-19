@@ -5,7 +5,6 @@ import { fenChainFor } from '../../lib/solutionNotation.js';
 import MoveLabel from './MoveLabel.jsx';
 import ResultField from './ResultField.jsx';
 
-// Порт renderReview() из admins/js/admin.js.
 export default function ReviewView({ draft, dispatch, onEdit, onSaveDraft, onPublish }) {
   const castlingText = [];
   if (draft.castling.wOO) castlingText.push('Белые O-O');
@@ -15,8 +14,6 @@ export default function ReviewView({ draft, dispatch, onEdit, onSaveDraft, onPub
 
   const stepFens = fenChainFor(draft);
 
-  // Позиции-массивы (та же цепочка, что и в StepsList.jsx) — по ним MoveLabel
-  // берёт эмодзи фигуры, а не только текст хода.
   const stepPositions = { beforePlayer: [], beforeReply: [] };
   {
     let pos = draft.position;

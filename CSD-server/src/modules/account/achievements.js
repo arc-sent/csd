@@ -1,16 +1,5 @@
 const prisma = require('../../shared/prisma');
 
-// Реестр достижений. Правила живут в коде (не в БД и не в админке) — как и
-// пороги прав доступа в entitlements.service.js: считать из уже существующих
-// данных дешевле, чем заводить редактируемую сущность.
-//
-// А вот сам факт разблокировки хранится в таблице user_achievements, и это
-// важно: дата получения из истории решений не восстанавливается, если правило
-// потом поменяют, и без неё нельзя один раз показать «новое достижение».
-//
-// unlocked(stats) — условие, progress(stats) — 0..100 для ещё не полученных.
-// Всё, что нужно правилам, приходит в одном объекте stats (см. buildStats в
-// cabinet.service.js), новых запросов в БД правила не делают.
 const ACHIEVEMENTS = [
   {
     key: 'first-solve',
@@ -70,14 +59,6 @@ const ACHIEVEMENTS = [
   }
 ];
 
-/**
- * Записывает достижения, которые пользователь заработал, но которых ещё нет в
- * БД. Идемпотентно: повтор гасится уникальным (userId, key), поэтому функцию
- * безопасно звать и после решения задачи, и при открытии кабинета.
- *
- * Вызов на чтении дашборда нужен для тех, кто накопил историю до появления
- * этой таблицы: иначе их достижения ждали бы следующего решения.
- */
 async function syncAchievements(userId, stats) {
   const earned = ACHIEVEMENTS.filter(a => a.unlocked(stats)).map(a => a.key);
   if (earned.length === 0) return;
@@ -96,10 +77,6 @@ async function syncAchievements(userId, stats) {
   });
 }
 
-/**
- * Список для кабинета: правило + факт разблокировки из БД. Порядок — как в
- * реестре, чтобы карточки не прыгали от запроса к запросу.
- */
 function buildAchievements(stats, unlockedRows) {
   const byKey = new Map(unlockedRows.map(row => [row.key, row]));
   return ACHIEVEMENTS.map(def => {
@@ -110,7 +87,6 @@ function buildAchievements(stats, unlockedRows) {
       description: def.description,
       unlocked: Boolean(row),
       unlockedAt: row ? row.unlockedAt : null,
-      // Показать подсветку «новое» ровно один раз — до вызова /achievements/seen.
       isNew: Boolean(row && !row.seenAt),
       progress: row ? 100 : Math.max(0, Math.min(100, def.progress(stats)))
     };

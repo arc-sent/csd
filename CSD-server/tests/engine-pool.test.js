@@ -4,12 +4,9 @@ const { createEnginePool } = require('../src/modules/engine/stockfish.pool');
 const FAKE_ENGINE = path.join(__dirname, 'fixtures', 'fake-uci-engine.js');
 const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
-// Фейковый движок настраивается переменными окружения, которые пул передаёт
-// дочернему процессу явно (мутировать process.env внутри Jest бесполезно —
-// spawn читает настоящее окружение воркера, а не песочницу Jest).
 function poolWith(env) {
   return createEnginePool({
-    path: process.execPath, // node
+    path: process.execPath,
     args: [FAKE_ENGINE],
     env: env || {},
     initTimeout: 5000
@@ -25,7 +22,7 @@ describe('пул движка', () => {
       expect(res.ponder).toBe('e7e5');
       expect(res.pv).toEqual(['e2e4', 'e7e5', 'g1f3']);
       expect(res.score).toEqual({ type: 'cp', value: 34 });
-      expect(res.depth).toBe(12); // берётся самая глубокая info-строка
+      expect(res.depth).toBe(12);
     } finally {
       pool.shutdown();
     }
@@ -79,7 +76,6 @@ describe('пул движка', () => {
         pool.analyze({ fen: START_FEN, depth: 5, timeout: 300 })
       ).rejects.toMatchObject({ statusCode: 504 });
 
-      // Зависший процесс должен быть убит, иначе очередь встанет колом.
       expect(pool.isRunning()).toBe(false);
     } finally {
       pool.shutdown();

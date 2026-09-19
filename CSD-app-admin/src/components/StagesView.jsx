@@ -9,7 +9,7 @@ export default function StagesView({ notify, onOpenStage }) {
   const [stages, setStages] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [editing, setEditing] = useState(null); // null = список, {} = создание, {...} = редактирование
+  const [editing, setEditing] = useState(null);
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formPrice, setFormPrice] = useState(0);

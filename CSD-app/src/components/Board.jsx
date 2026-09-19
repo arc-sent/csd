@@ -2,7 +2,6 @@ import {PIECE_ART, FILES} from '../lib/chess.js';
 
 const RANKS = [8, 7, 6, 5, 4, 3, 2, 1];
 const INDEXES = [0, 1, 2, 3, 4, 5, 6, 7];
-// Порядок обхода строк и столбцов: при развороте он просто идёт с конца.
 const order = flipped => (flipped ? [...INDEXES].reverse() : INDEXES);
 
 function Piece({piece}) {
@@ -20,10 +19,6 @@ function Piece({piece}) {
 
 export function Board({
   position,
-  // Разворот доски, когда ученик играет чёрными: свои фигуры должны быть внизу.
-  // Меняется только порядок отрисовки — в data-r/data-c уходят модельные
-  // координаты, поэтому логика хода, перетаскивания и анимации не знает о
-  // развороте вовсе.
   flipped = false,
   large = false,
   interactive = false,
@@ -59,11 +54,7 @@ export function Board({
       {order(flipped).map(r =>
         order(flipped).map(c => {
           const piece = position[r][c];
-          // Цвет клетки от разворота не зависит: при повороте на 180° чётность
-          // (r + c) сохраняется.
           const classes = ['square', (r + c) % 2 === 0 ? 'light' : 'dark'];
-          // «Можно взять» — те же ходы, что подсветит движок: цвет фигуры тут
-          // больше ни при чём, ученик может играть и за чёрных.
           if (interactive && !locked && movable.some(([mr, mc]) => mr === r && mc === c)) {
             classes.push('movable');
           }
@@ -86,11 +77,8 @@ export function Board({
   );
 }
 
-/** Доска с буквенно-цифровыми координатами по краям (ТЗ 4.3). */
 export function BoardFrame({children, className = '', coordClassName = '', flipped = false}) {
   const coord = `grid place-items-center font-display font-bold select-none ${coordClassName}`;
-  // Подписи разворачиваются вместе с доской, иначе координаты разойдутся с
-  // клетками.
   const ranks = flipped ? [...RANKS].reverse() : RANKS;
   const files = flipped ? FILES.split('').reverse() : FILES.split('');
   return (

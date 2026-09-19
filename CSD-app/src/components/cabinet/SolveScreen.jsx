@@ -51,8 +51,6 @@ export function SolveScreen({levelId, siblings, onBack, onOpenLevel, onSolvedCha
     [levelId, notify, onSolvedChange]
   );
 
-  // Ошибка учитывается в статистике, но она не должна мешать решать задачу:
-  // сбой отправки гасим молча, тост про «не удалось» здесь только отвлекал бы.
   const handleMistake = useCallback(() => {
     markLevelMistake(levelId).catch(() => {});
   }, [levelId]);
@@ -94,8 +92,6 @@ export function SolveScreen({levelId, siblings, onBack, onOpenLevel, onSolvedCha
       )}
 
       {data && data.supported && trainerLevel && (
-        // key обязателен: useTrainer читает уровень только в ленивом
-        // инициализаторе состояния, при смене пропса доска бы не сбросилась.
         <TrainerPanel
           key={data.level.id}
           level={trainerLevel}

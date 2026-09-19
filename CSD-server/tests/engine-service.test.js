@@ -33,7 +33,6 @@ describe('разбор главного варианта в шаги решен�
   });
 
   it('обрывает разбор на первом ходе, который не воспроизводится в позиции', () => {
-    // e2e4 легален, a1a8 — нет: разбор должен остановиться на первом ходе.
     const { steps } = pvToSteps(START_FEN, ['e2e4', 'a1a8', 'g1f3']);
     expect(steps).toHaveLength(1);
     expect(steps[0].player).toEqual({ from: sq('e2'), to: sq('e4') });
@@ -74,23 +73,23 @@ describe('сквозная проверка: FEN → pvToSteps → applyMove д�
     const fen = '4k3/8/8/8/8/8/8/4K2R w K - 0 1';
     const { steps } = pvToSteps(fen, ['e1g1']);
     const position = rules.applyMove(rules.fromFen(fen).position, steps[0].player);
-    expect(position[7][6]).toBe('♔'); // g1
-    expect(position[7][5]).toBe('♖'); // f1
-    expect(position[7][7]).toBe('');  // h1 — ладья уехала
+    expect(position[7][6]).toBe('♔');
+    expect(position[7][5]).toBe('♖');
+    expect(position[7][7]).toBe('');
   });
 
   it('взятие на проходе: снятая пешка реально пропадает с доски', () => {
     const fen = '4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1';
     const { steps } = pvToSteps(fen, ['e5d6']);
     const position = rules.applyMove(rules.fromFen(fen).position, steps[0].player);
-    expect(position[2][3]).toBe('♙'); // d6 — куда пришла пешка
-    expect(position[3][3]).toBe('');  // d5 — снятая пешка соперника
+    expect(position[2][3]).toBe('♙');
+    expect(position[3][3]).toBe('');
   });
 
   it('превращение: пешка реально становится ферзём на доске', () => {
     const fen = '4k3/P7/8/8/8/8/8/4K3 w - - 0 1';
     const { steps } = pvToSteps(fen, ['a7a8q']);
     const position = rules.applyMove(rules.fromFen(fen).position, steps[0].player);
-    expect(position[0][0]).toBe('♕'); // a8
+    expect(position[0][0]).toBe('♕');
   });
 });

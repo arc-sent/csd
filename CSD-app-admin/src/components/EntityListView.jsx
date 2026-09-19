@@ -1,6 +1,3 @@
-// Общий каркас списка: шапка+счётчик+кнопка создания, тулбар поиска/фильтров,
-// пустое состояние, сетка карточек. Порт общего паттерна admins/js/stages.js,
-// admins/js/assignments.js, admins/js/levels.js.
 export default function EntityListView({
   breadcrumb,
   sectionLabel,

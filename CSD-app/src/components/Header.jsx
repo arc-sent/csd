@@ -12,19 +12,12 @@ const NAV = [
   ['#contacts', 'Контакты']
 ];
 
-// В кабинете якоря лендинга ведут в пустоту — уводим на лендинг вместе с
-// якорем.
 const navHref = (hash, isCabinet) => (isCabinet ? `${window.location.pathname}${hash}` : hash);
 
 const textButton =
   'text-[13px] font-semibold text-muted transition duration-200 hover:text-accent';
 
 export function Brand({className = '', isCabinet = false}) {
-  // На лендинге "#top" — обычный внутристраничный якорь (плавный скролл
-  // наверх). В кабинете шапки лендинга нет вовсе, и этот же якорь вёл бы в
-  // никуда — как и якоря NAV ниже, вместо него нужен обычный переход на
-  // главную (полная перезагрузка, без preventDefault/navigate — тот же приём,
-  // что и у navHref).
   const href = isCabinet ? window.location.pathname : '#top';
   return (
     <a
@@ -34,8 +27,6 @@ export function Brand({className = '', isCabinet = false}) {
       <span className="grid place-items-center w-[34px] h-[34px] rounded-[11px] bg-invert text-invert-fg text-xl -rotate-6">
         ♞
       </span>
-      {/* На телефоне имя мельче: «ChessSchoolDinamik» вдвое длиннее прежнего
-          названия и в полном размере выдавливало бургер за край экрана. */}
       <span className="text-[17px] sm:text-xl">
         ChessSchool<span className="text-accent">Dinamik</span>
       </span>
@@ -46,13 +37,8 @@ export function Brand({className = '', isCabinet = false}) {
 export function Header({isCabinet = false, navigate, onOpenAuth}) {
   const [open, setOpen] = useState(false);
   const {status, user} = useAuthContext();
-  // 'unverified' — тоже залогинен (аккаунт есть, просто почта ещё не
-  // подтверждена): шапка не должна откатываться к «Войти»/«Купить доступ»,
-  // ссылка на кабинет просто приведёт на экран подтверждения (см. App.jsx).
   const authenticated = status === 'authenticated' || status === 'unverified';
 
-  // href настоящий, чтобы работали средний клик и «открыть в новой вкладке»;
-  // preventDefault только на обычном левом клике.
   const cabinetHref = buildHref({view: 'cabinet'});
   const openCabinet = event => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
@@ -79,15 +65,6 @@ export function Header({isCabinet = false, navigate, onOpenAuth}) {
 
         <div className="flex items-center gap-3 sm:gap-[18px]">
           {authenticated ? (
-            // Выйти — теперь только в самом кабинете (ProfileHeader), не в
-            // шапке: она видна на каждой странице сайта, а не только вошедшему
-            // в свой аккаунт, и дублировать там выход незачем.
-            // max-sm:hidden, а не «hidden sm:inline-flex»: голый hidden спорит
-            // с inline-flex из buttonBase за display на одном и том же уровне
-            // каскада и проигрывает ему — кнопка была видна и на телефоне.
-            // Видна и на телефоне (без max-sm:hidden) — теперь это
-            // единственный вход в кабинет на мобильном: большую кнопку с
-            // аватаром и почтой убрали из бургер-панели ниже.
             <a
               href={cabinetHref}
               onClick={openCabinet}
@@ -104,11 +81,6 @@ export function Header({isCabinet = false, navigate, onOpenAuth}) {
 
           <ThemeToggle />
 
-          {/* Бургер превращается в крестик — состояние берётся из aria-expanded.
-              Полоски идут с лёгким «пружинным» перелётом (cubic-bezier с
-              overshoot) вместо плоского ease — так поворот читается живее.
-              У самой кнопки добавлена реакция на hover/active, которой
-              раньше не было вовсе — по нажатию она слегка проседает. */}
           <button
             type="button"
             className="lg:hidden flex flex-col items-center justify-center gap-1 w-[42px] h-[42px] border border-line bg-fill rounded-xl transition-[border-color,transform] duration-200 hover:border-ink active:scale-90"
@@ -147,8 +119,6 @@ export function Header({isCabinet = false, navigate, onOpenAuth}) {
               {text}
             </a>
           ))}
-          {/* Кнопка входа в кабинет (аватар+почта) убрана отсюда — в шапке
-              уже есть компактная ссылка-аватар, видная и на мобильном. */}
           {!authenticated && (
             <button
               type="button"

@@ -1,11 +1,3 @@
-// Минимальный UCI-движок для тестов: говорит по протоколу, но ничего не
-// считает. Позволяет детерминированно проверять пул, очередь, разбор вывода
-// и таймауты, не завися от установленного Stockfish.
-//
-// Управление через переменные окружения:
-//   FAKE_PV    — главный вариант, через пробел (по умолчанию "e2e4 e7e5 g1f3")
-//   FAKE_MODE  — normal | hang (не отвечает на go) | nomove (bestmove (none))
-//   FAKE_DELAY — задержка перед bestmove, мс
 const pv = (process.env.FAKE_PV || 'e2e4 e7e5 g1f3').trim();
 const mode = process.env.FAKE_MODE || 'normal';
 const delay = Number(process.env.FAKE_DELAY || 0);
@@ -34,7 +26,7 @@ function handle(line) {
     return;
   }
   if (line.startsWith('go')) {
-    if (mode === 'hang') return; // специально молчим — проверяем таймаут
+    if (mode === 'hang') return;
     setTimeout(() => {
       if (mode === 'nomove') {
         say('info depth 1 score mate 0');
@@ -49,7 +41,6 @@ function handle(line) {
     return;
   }
   if (line === 'stop') {
-    // В режиме hang по stop всё равно ничего не отдаём — пул должен убить процесс.
     if (mode !== 'hang') say('bestmove ' + pv.split(/\s+/)[0]);
     return;
   }

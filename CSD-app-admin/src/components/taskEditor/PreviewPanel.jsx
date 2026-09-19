@@ -4,7 +4,6 @@ import { chessRules } from '../../lib/chessRules.js';
 import { advanceFen } from '../../lib/solutionNotation.js';
 import MoveLabel from './MoveLabel.jsx';
 
-// Порт buildPreviewFrames()/renderPreviewBoard() из admins/js/solution-builder.js.
 export default function PreviewPanel({ draft }) {
   const frames = useMemo(() => {
     const result = [{ position: draft.position, fen: chessRules.toFen(draft), move: null, kind: 'start' }];
@@ -23,8 +22,6 @@ export default function PreviewPanel({ draft }) {
   }, [draft.position, draft.turn, draft.castling, draft.enPassant, draft.steps]);
 
   const [cursor, setCursor] = useState(0);
-  // Список шагов мог измениться (добавили/удалили ход) — держим курсор в
-  // допустимых границах вместо падения на несуществующий кадр.
   useEffect(() => {
     setCursor(c => Math.min(c, frames.length - 1));
   }, [frames.length]);

@@ -6,7 +6,6 @@ const controller = require('./users.controller');
 
 const router = Router();
 
-// Аккаунты покупателей видит только админ — гвард на весь роутер.
 router.use(authGuard);
 
 router.get('/', controller.listHandler);

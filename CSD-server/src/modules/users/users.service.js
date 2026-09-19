@@ -2,14 +2,8 @@ const prisma = require('../../shared/prisma');
 const { AppError } = require('../../shared/errors');
 const entitlements = require('../account/entitlements.service');
 
-// Список аккаунтов покупателей для админки и ручная выдача им доступа к
-// заданиям. Своя таблица прав — Grant, право по оплате остаётся у платежей
-// (см. account/entitlements.service.js).
-
 const LIST_LIMIT = 200;
 
-// Поля перечисляются явно и всегда: в User есть passwordHash, и просто отдать
-// модель наружу нельзя.
 const USER_CARD = {
   id: true,
   email: true,
@@ -34,8 +28,6 @@ async function getById(id) {
   const user = await prisma.user.findUnique({ where: { id }, select: USER_CARD });
   if (!user) throw new AppError(404, 'Аккаунт не найден');
 
-  // Доступы считает entitlements — второй реализации правила «есть ли право»
-  // быть не должно.
   const owned = await entitlements.listOwnedAssignments(id);
   const assignments = owned.length
     ? await prisma.assignment.findMany({
@@ -45,7 +37,6 @@ async function getById(id) {
     : [];
   const byId = new Map(assignments.map(a => [a.id, a]));
 
-  // id активной выдачи нужен интерфейсу для кнопки «Отозвать».
   const grants = await prisma.grant.findMany({
     where: { userId: id, revokedAt: null },
     orderBy: { createdAt: 'desc' },
@@ -61,8 +52,6 @@ async function getById(id) {
         assignment: byId.get(o.assignmentId),
         acquiredAt: o.acquiredAt,
         source: o.source,
-        // Есть и у купленного задания, если его когда-то ещё и выдали руками:
-        // отзыв такой выдачи доступ не отберёт, и это должно быть видно.
         grant: grantByAssignment.get(o.assignmentId) || null
       }))
   };
@@ -86,12 +75,6 @@ async function grantAssignment(userId, { assignmentId, note }, adminId) {
   });
 }
 
-// Выдача этапа целиком — по выдаче на каждое опубликованное задание этапа,
-// которого у аккаунта ещё нет (купленные и уже выданные пропускаются). Отдельной
-// «выдачи этапа» в модели нет намеренно: доступ остаётся поштучным, каждое
-// задание можно отозвать отдельно, а проверка права (entitlements) не
-// усложняется. Задания, опубликованные в этап позже, автоматически не
-// добавляются — их можно выдать повторной выдачей этапа.
 async function grantStage(userId, { stageId, note }, adminId) {
   const [user, stage] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { id: true } }),
@@ -115,8 +98,6 @@ async function grantStage(userId, { stageId, note }, adminId) {
   return { granted: missing.length, skipped: stage.assignments.length - missing.length };
 }
 
-// Отзыв — проставление revokedAt, а не удаление строки: история выдач должна
-// сохраняться. Купленный доступ отзыв выдачи не трогает — он идёт от платежа.
 async function revokeGrant(userId, grantId) {
   const grant = await prisma.grant.findUnique({
     where: { id: grantId },

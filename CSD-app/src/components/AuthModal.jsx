@@ -9,22 +9,9 @@ const tabClass = active =>
     active ? 'bg-surface text-ink shadow-[0_2px_8px_rgba(18,19,17,.08)]' : 'text-faint hover:text-ink'
   }`;
 
-// Восстановление пароля — отдельный "экран" той же модалки, а не отдельная
-// модалка: не нужно тащить наружу onClose/onSuccess ещё раз, оболочка та же.
-// Три шага (email → код → новый пароль) внутри одного компонента, а не
-// отдельные режимы AuthModal, — сама смена пароля никогда не должна попадать
-// в историю вкладок "Вход/Регистрация" сверху. Поле нового пароля показывается
-// только на третьем шаге, после того как код уже проверен сервером
-// (POST /password-reset/verify) и обменян на resetToken — ввод кода и ввод
-// нового пароля не должны быть одной формой, иначе неверный код узнаётся
-// только вместе с уже введённым (и потерянным при ошибке) новым паролем.
 function ResetPasswordForm({initialEmail, autoSend, onDone}) {
-  // С «Забыли пароль?» в форме входа email уже известен — код уходит сразу,
-  // без лишнего экрана, где его пришлось бы вводить второй раз. Экран запроса
-  // email остаётся только как запасной путь (email пуст или сам код нужно
-  // запросить заново из середины флоу).
   const skipToCode = autoSend && Boolean(initialEmail);
-  const [step, setStep] = useState(skipToCode ? 'sending' : 'request'); // 'request' | 'sending' | 'code' | 'newPassword'
+  const [step, setStep] = useState(skipToCode ? 'sending' : 'request');
   const [email, setEmail] = useState(initialEmail || '');
   const [code, setCode] = useState('');
   const [resetToken, setResetToken] = useState('');
@@ -49,8 +36,6 @@ function ResetPasswordForm({initialEmail, autoSend, onDone}) {
     setError('');
     setSubmitting(true);
     try {
-      // Сервер всегда отвечает {sent: true} вне зависимости от того,
-      // существует ли email — так и должно быть, это не ошибка.
       await requestPasswordReset(email);
       setStep('code');
     } catch (err) {
@@ -207,11 +192,6 @@ function ResetPasswordForm({initialEmail, autoSend, onDone}) {
   );
 }
 
-/**
- * Вход, регистрация и восстановление пароля покупателя. onSuccess нужен,
- * чтобы не потерять действие, ради которого пользователя попросили войти
- * (например, начатую покупку).
- */
 export function AuthModal({mode: initialMode = 'login', onClose, onSuccess}) {
   const {login, register} = useAuthContext();
   const [mode, setMode] = useState(initialMode);
@@ -221,8 +201,6 @@ export function AuthModal({mode: initialMode = 'login', onClose, onSuccess}) {
   const [submitting, setSubmitting] = useState(false);
   const [resetNotice, setResetNotice] = useState('');
   const [autoSendReset, setAutoSendReset] = useState(false);
-  // Соглашение показывается перед формой регистрации и принимается заново при
-  // каждом открытии окна — принятие не «запоминается» надолго.
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const isRegister = mode === 'register';

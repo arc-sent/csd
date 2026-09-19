@@ -1,10 +1,6 @@
 import { useEffect } from 'react';
 import { fenChainFor, resultFor } from '../../lib/solutionNotation.js';
 
-// Общий список для ReviewView.jsx и SolutionBuilderView.jsx — результат
-// партии (мат/ничья, resultFor умеет предложить его автоматически) отдельной
-// группой от авторской оценки позиции без мата (±/∓/=, только руками —
-// это суждение автора задачи, а не факт о позиции, который можно вычислить).
 export const RESULT_GROUPS = [
   {
     label: 'Результат партии',
@@ -16,12 +12,6 @@ export const RESULT_GROUPS = [
   }
 ];
 
-/**
- * Поле «Результат / оценка» — доступно и на шаге 2 (Решение), и на шаге 3
- * (Проверка): раньше выставить результат можно было только дойдя до
- * финальной проверки, теперь — сразу же, как только решение готово, без
- * обязательного перехода на следующий шаг.
- */
 export default function ResultField({ draft, dispatch }) {
   const suggestedResult = resultFor(fenChainFor(draft).finalFen);
   useEffect(() => {

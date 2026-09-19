@@ -1,9 +1,5 @@
-// Клиент к API ChessSchoolDinamik для публичного сайта: витрина тарифов, оплата и
-// личный кабинет покупателя.
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
-// Ключ намеренно отличается от 'chesslab_admin_token' в CSD-app-admin: в деве оба
-// приложения могут жить на одном origin и затирали бы токены друг друга.
 const TOKEN_KEY = 'chesslab_user_token';
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
@@ -33,7 +29,6 @@ async function request(path, options = {}) {
   try {
     body = await res.json();
   } catch (e) {
-    // тело могло быть пустым
   }
 
   if (!res.ok) {
@@ -42,13 +37,9 @@ async function request(path, options = {}) {
   return body;
 }
 
-// ---------- Витрина (без авторизации) ----------
-
 export function fetchPublicStages() {
   return request('/public/stages');
 }
-
-// ---------- Аккаунт ----------
 
 export async function registerAccount({ email, password, name }) {
   const result = await request('/account/register', {
@@ -72,8 +63,6 @@ export async function me() {
   return (await request('/account/me')).user;
 }
 
-// ---------- Подтверждение email (мягкий режим — не блокирует кабинет) ----------
-
 export async function verifyEmailCode(code) {
   return (await request('/email-verification/verify', {
     method: 'POST',
@@ -85,8 +74,6 @@ export function resendVerificationCode() {
   return request('/email-verification/resend', { method: 'POST' });
 }
 
-// ---------- Восстановление пароля (публичное, без токена) ----------
-
 export function requestPasswordReset(email) {
   return request('/password-reset/request', {
     method: 'POST',
@@ -94,8 +81,6 @@ export function requestPasswordReset(email) {
   });
 }
 
-// Возвращает {resetToken} — код проверяется и гасится сразу здесь, дальше
-// пароль меняется по токену, а не по коду повторно.
 export function verifyPasswordResetCode({ email, code }) {
   return request('/password-reset/verify', {
     method: 'POST',
@@ -109,8 +94,6 @@ export function confirmPasswordReset({ resetToken, newPassword }) {
     body: JSON.stringify({ resetToken, newPassword })
   });
 }
-
-// ---------- Кабинет ----------
 
 export async function fetchMyAssignments() {
   return (await request('/account/assignments')).assignments;
@@ -136,8 +119,6 @@ export async function markLevelSolved(levelId, { usedSolution = false } = {}) {
   return result.progress;
 }
 
-// Неверный ход. Из этих отметок считается точность в кабинете, поэтому ошибка
-// отправки не должна мешать решать задачу — вызывающий код её глушит.
 export function markLevelMistake(levelId) {
   return request(`/account/levels/${levelId}/progress`, {
     method: 'POST',
@@ -145,7 +126,6 @@ export function markLevelMistake(levelId) {
   });
 }
 
-// Часовой пояс нужен серверу, чтобы считать серию по местным дням.
 export function saveTimeZone(timeZone) {
   return request('/account/timezone', { method: 'PUT', body: JSON.stringify({ timeZone }) });
 }
@@ -154,11 +134,6 @@ export function markAchievementsSeen() {
   return request('/account/achievements/seen', { method: 'POST' });
 }
 
-// ---------- Оплата ----------
-// email не передаётся: сервер берёт почту для чека из аккаунта покупателя.
-
-// Ровно один из двух параметров — оплата задания или этапа целиком
-// (см. CSD-server/src/modules/payments/payments.validation.js).
 export function createPayment({ assignmentId, stageId }) {
   return request('/payments/create', {
     method: 'POST',

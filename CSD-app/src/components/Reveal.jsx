@@ -1,9 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
 
-/**
- * Появление блока при прокрутке. То, что уже в зоне видимости, показывается
- * сразу — иначе при сбое наблюдателя первый экран остался бы пустым.
- */
 export function Reveal({children, delay = false, as: Tag = 'div', className = '', ...rest}) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);

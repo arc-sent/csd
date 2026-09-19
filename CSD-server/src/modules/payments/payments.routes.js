@@ -7,17 +7,9 @@ const controller = require('./payments.controller');
 
 const router = Router();
 
-// Покупка только из-под аккаунта покупателя (userGuard, не authGuard) —
-// платёж сразу привязывается к userId, из аккаунта же берётся почта для чека.
-// requireVerifiedEmail — почта нужна настоящая: на неё уходит чек (54-ФЗ).
 router.post('/create', userGuard, requireVerifiedEmail, validate(createPaymentSchema), controller.createHandler);
-// Без guard'а — сюда стучится сама ЮKassa, а не наш фронтенд.
-// Подлинность уведомления не проверяется по телу запроса (см. handleWebhook).
 router.post('/webhook', controller.webhookHandler);
 
-// Журнал платежей в админке. Гвард висит на маршрутах, а не на роутере
-// (router.use) — иначе он накрыл бы и вебхук, к которому ЮKassa приходит без
-// какого-либо нашего токена.
 router.get('/', authGuard, controller.listHandler);
 router.post('/:id/refresh', authGuard, controller.refreshHandler);
 

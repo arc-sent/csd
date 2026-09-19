@@ -7,7 +7,6 @@ const PASSWORD = 'super-secret-123';
 const DAY_MS = 24 * 60 * 60 * 1000;
 const daysAgo = n => new Date(Date.now() - n * DAY_MS);
 
-// Валидная позиция: белый ферзь d4, белый король g1, чёрный король g8.
 const validPosition = () => {
   const board = Array.from({ length: 8 }, () => Array(8).fill(''));
   board[0][6] = '♚';
@@ -22,9 +21,6 @@ const auth = user => ({ Authorization: `Bearer ${user.token}` });
 
 async function registerUser(app, email) {
   const res = await request(app).post('/api/account/register').send({ email, password: PASSWORD });
-  // Дашборд и кабинет теперь требуют подтверждённую почту — эти тесты не про
-  // само подтверждение (см. email-verification.test.js), поэтому подтверждаем
-  // сразу в обход письма/кода.
   await prisma.user.update({ where: { id: res.body.user.id }, data: { emailVerifiedAt: new Date() } });
   return { id: res.body.user.id, token: res.body.token };
 }
@@ -42,9 +38,6 @@ async function buyAssignment(userId, assignmentId, email) {
   });
 }
 
-// createdAt задаётся явно (по образцу account-cabinet.test.js): порядок
-// задач в кабинете идёт по createdAt, а параллельные prisma.create() не
-// гарантируют, что реальные метки времени совпадут с порядком в массиве.
 async function makeLevel(assignmentId, name, createdAt) {
   return prisma.level.create({
     data: { name, assignmentId, status: 'published', position: validPosition(), castling, steps: validSteps, createdAt }
@@ -120,12 +113,9 @@ describe('Account: дашборд кабинета — GET /api/account/dashboar
       await buyAssignment(user.id, assignmentA, 'dash-main@chesslab.local');
       await buyAssignment(user.id, assignmentB, 'dash-main@chesslab.local');
 
-      // A: решено 3 дня назад и вчера (последнее решение в A — вчера).
-      // usedSolution:true на одном решении — проверяет расчёт точности.
       await solve(user.id, a1.id, { solvedAt: daysAgo(3), usedSolution: false });
       await solve(user.id, a2.id, { solvedAt: daysAgo(1), usedSolution: true });
 
-      // B: решено позавчера — старее, чем последнее решение в A.
       await solve(user.id, b1.id, { solvedAt: daysAgo(2), usedSolution: false });
     });
 
@@ -141,7 +131,6 @@ describe('Account: дашборд кабинета — GET /api/account/dashboar
       const res = await request(app).get('/api/account/dashboard').set(auth(user));
       expect(res.status).toBe(200);
       expect(res.body.totalSolved).toBe(3);
-      // 2 решения без подсказки из 3 → 67%.
       expect(res.body.accuracy).toBe(67);
     });
 
@@ -154,7 +143,6 @@ describe('Account: дашборд кабинета — GET /api/account/dashboar
       const res = await request(app).get('/api/account/dashboard').set(auth(user));
       const week = res.body.weekActivity;
       expect(week).toHaveLength(7);
-      // Индекс 6 — сегодня, 5 — вчера, 4 — позавчера, 3 — 3 дня назад.
       expect(week[6]).toBe(false);
       expect(week[5]).toBe(true);
       expect(week[4]).toBe(true);
@@ -177,7 +165,7 @@ describe('Account: дашборд кабинета — GET /api/account/dashboar
       const res = await request(app).get('/api/account/dashboard').set(auth(user));
       const byId = Object.fromEntries(res.body.achievements.map(a => [a.key, a]));
       expect(byId['streak-week'].unlocked).toBe(false);
-      expect(byId['streak-week'].progress).toBe(43); // round(3/7*100)
+      expect(byId['streak-week'].progress).toBe(43);
       expect(byId['accurate-100'].unlocked).toBe(false);
       expect(byId['marathon'].unlocked).toBe(false);
     });
@@ -203,13 +191,11 @@ describe('Account: дашборд кабинета — GET /api/account/dashboar
       })).id;
       await buyAssignment(user.id, assignmentId, 'dash-thresholds@chesslab.local');
 
-      // Серия ровно 7 дней: по одной решённой задаче в день, включая сегодня.
       const streakLevels = await Promise.all(
         Array.from({ length: 7 }, (_, i) => makeLevel(assignmentId, `Серия ${i}`))
       );
       await Promise.all(streakLevels.map((level, i) => solve(user.id, level.id, { solvedAt: daysAgo(6 - i) })));
 
-      // Марафон: 30 решений в один и тот же день (сегодня же, чтобы не сбить серию).
       const marathonLevels = await Promise.all(
         Array.from({ length: 30 }, (_, i) => makeLevel(assignmentId, `Марафон ${i}`))
       );
@@ -295,7 +281,6 @@ describe('Account: дашборд кабинета — GET /api/account/dashboar
         where: { userId_levelId: { userId: user.id, levelId: levels[0].id } }
       });
       expect(row.mistakes).toBe(2);
-      // Ошибка сама по себе не засчитывает задачу решённой.
       expect(row.solved).toBe(false);
     });
 
@@ -311,7 +296,7 @@ describe('Account: дашборд кабинета — GET /api/account/dashboar
 
       const res = await request(app).get('/api/account/dashboard').set(auth(user));
       expect(res.body.totalSolved).toBe(2);
-      expect(res.body.cleanSolved).toBe(1); // вторая решена без ошибок
+      expect(res.body.cleanSolved).toBe(1);
       expect(res.body.totalMistakes).toBe(2);
       expect(res.body.accuracy).toBe(50);
     });
@@ -346,7 +331,6 @@ describe('Account: дашборд кабинета — GET /api/account/dashboar
     });
 
     it('считает рекорд серии, даже когда текущая серия уже оборвалась', async () => {
-      // Четыре дня подряд далеко в прошлом (рекорд) и один день вчера (текущая).
       const levels = await Promise.all(
         Array.from({ length: 5 }, (_, i) => makeLevel(assignmentId, `Рекорд ${i}`))
       );
@@ -359,7 +343,6 @@ describe('Account: дашборд кабинета — GET /api/account/dashboar
     });
 
     it('один и тот же момент времени попадает в разные дни в разных поясах', async () => {
-      // 22:30 UTC — это уже следующий день в Москве (+3), но ещё текущий в UTC.
       const level = await makeLevel(assignmentId, 'Полночь');
       const lateUtc = new Date();
       lateUtc.setUTCDate(lateUtc.getUTCDate() - 3);
@@ -380,7 +363,6 @@ describe('Account: дашборд кабинета — GET /api/account/dashboar
       expect(put.status).toBe(204);
 
       const mskRes = await request(app).get('/api/account/dashboard').set(auth(user));
-      // День решения сдвинулся, значит и картина недели другая.
       expect(mskRes.body.weekActivity).not.toEqual(utcWeek);
     });
 

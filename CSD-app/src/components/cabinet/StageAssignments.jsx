@@ -2,13 +2,8 @@ import {Reveal} from '../Reveal.jsx';
 import {SectionIntro} from '../ui.jsx';
 import {plural} from '../../lib/plural.js';
 
-// Одна высота у купленной карточки и у карточки покупки: в общей сетке ряд
-// иначе получается рваным, когда у части заданий нет описания.
 const CARD_BASE = 'relative flex flex-col min-h-[268px] rounded-[22px] p-6 transition duration-200';
 
-// Фигура на карточке — чистая декорация: в модели Assignment такого поля нет,
-// берём по кругу, чтобы соседние карточки не повторялись (тот же приём, что в
-// AssignmentCarousel).
 const PIECE_ROTATION = ['wN', 'bQ', 'wB', 'bR', 'bK', 'wR', 'bN', 'wK', 'bB', 'wP', 'wQ', 'bP'];
 
 function statusPill(solved, total) {
@@ -48,8 +43,6 @@ function OwnedCard({assignment, index, onOpen}) {
       </span>
       <PieceBadge piece={piece} />
       <h3 className="font-display text-[19px] leading-[1.15] tracking-[-.03em] mb-2 [overflow-wrap:anywhere]">{assignment.name}</h3>
-      {/* [overflow-wrap:anywhere]: описание вводит админ, в нём может оказаться
-          строка без пробелов — без переноса она вылезает за карточку. */}
       <p className="text-[13px] leading-[1.6] text-muted mb-4 line-clamp-3 [overflow-wrap:anywhere]">
         {assignment.description || 'Задание курса'}
       </p>
@@ -107,11 +100,6 @@ function StatChip({value, text}) {
   );
 }
 
-/**
- * Витрина выбранного этапа: купленные задания (с прогрессом) и некупленные
- * (с ценой и кнопкой «Купить») в одной сетке — так докупка следующего
- * задания не отдельный баннер, а естественное продолжение списка.
- */
 export function StageAssignments({stageName, assignments, owned, stats, badge, onOpen, onBuy}) {
   const remaining = assignments.filter(a => !owned.has(a.id));
   const remainingTotal = remaining.reduce((sum, a) => sum + a.price, 0);
@@ -123,15 +111,9 @@ export function StageAssignments({stageName, assignments, owned, stats, badge, o
 
   return (
     <>
-      {/* relative z-30: Reveal создаёт собственный слой (opacity/transform), и
-          без явного z-index следующие блоки (плитки, сетка карточек — тоже
-          Reveal/transform) перекрывали выпадающий список этапов, обрезая его. */}
       <Reveal className="relative z-30">
         <SectionIntro
           badge={badge}
-          // Когда есть переключатель, он и работает подписью секции: этап
-          // назван на нём, а вторая строка рядом только ломала бы вёрстку на
-          // узком экране.
           label={badge ? undefined : stageName || 'Этап'}
           title="Мои задания"
           note={note}

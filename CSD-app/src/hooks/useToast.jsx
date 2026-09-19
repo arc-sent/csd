@@ -1,8 +1,5 @@
 import {createContext, useCallback, useContext, useRef, useState} from 'react';
 
-// Раньше тост жил прямо в App.jsx и был доступен только Demo и Plans. Кабинету
-// он тоже нужен, поэтому переехал в провайдер. Разметка и тайминг (2200 мс,
-// один сбрасываемый таймер) сохранены один в один.
 const ToastContext = createContext(null);
 
 export function ToastProvider({children}) {

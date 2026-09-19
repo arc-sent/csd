@@ -1,6 +1,3 @@
-// Единая точка обработки ошибок API — порт Admin.handleApiError из
-// admins/js/auth.js. useAuth() регистрирует обработчик истёкшей сессии;
-// любой экран, поймавший ошибку запроса, зовёт handleApiError(err, notify).
 import { ApiError, logout } from './api.js';
 
 let onSessionExpired = () => {};

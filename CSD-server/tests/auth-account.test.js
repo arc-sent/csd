@@ -4,8 +4,6 @@ const bcrypt = require('bcryptjs');
 const { createApp } = require('../src/app');
 const prisma = require('../src/shared/prisma');
 
-// SMTP не настроен в тестовом окружении (см. tests/jest.setup.js) —
-// shared/mailer.js печатает код в консоль вместо отправки письма.
 function captureCode(logSpy) {
   const call = logSpy.mock.calls.find(args => String(args[0]).includes('[dev] Письмо для'));
   const match = call && String(call[0]).match(/Код для подтверждения email: (\d{6})/);
@@ -35,7 +33,6 @@ describe('Auth module: смена пароля и email админа', () => {
     await prisma.adminUser.deleteMany({ where: { email: { in: emails } } });
     const passwordHash = await bcrypt.hash(PASSWORD, 10);
     for (const email of emails) {
-      // "-new"-адреса — это ЦЕЛИ смены почты в тестах, не отдельные аккаунты.
       if (email.endsWith('-new@chesslab.local')) continue;
       await prisma.adminUser.create({ data: { email, passwordHash } });
     }
@@ -79,10 +76,6 @@ describe('Auth module: смена пароля и email админа', () => {
 
     it('отклоняет запрос смены на уже занятый email', async () => {
       const token = await loginAs(emails[1]);
-      // emails[0] — реально существующий аккаунт (см. beforeAll), в отличие
-      // от emails[2], который специально не создан («-new»-адрес — цель
-      // смены, а не отдельный аккаунт) — с несуществующим email 409 не
-      // сработал бы, а запрос тихо создал бы настоящую строку смены почты.
       const res = await request(app)
         .post('/api/auth/email/request')
         .set('Authorization', `Bearer ${token}`)

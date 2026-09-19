@@ -1,8 +1,5 @@
 import { useState } from 'react';
 
-// Поле пароля с кнопкой-глазом — 1:1 порт CSD-app/ModalShell.jsx.PasswordInput
-// (та же SVG-иконка), чтобы вход в админке визуально не отличался от входа
-// на сайте.
 export default function PasswordInput({ id, className = '', ...props }) {
   const [visible, setVisible] = useState(false);
   return (

@@ -1,5 +1,3 @@
-// Порт Admin.notify из admins/js/board-common.js: тост с автоскрытием через
-// 2400мс.
 import { useCallback, useRef, useState } from 'react';
 
 export function useToast() {

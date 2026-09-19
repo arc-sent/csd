@@ -23,7 +23,7 @@ async function create(data) {
 }
 
 async function update(id, data) {
-  await getById(id); // 404, если такого задания нет
+  await getById(id);
   return prisma.assignment.update({ where: { id }, data });
 }
 
@@ -34,7 +34,7 @@ async function updateStatus(id, status) {
 
 async function remove(id) {
   await getById(id);
-  await prisma.assignment.delete({ where: { id } }); // каскадно удалит задачи
+  await prisma.assignment.delete({ where: { id } });
 }
 
 module.exports = { list, getById, create, update, updateStatus, remove };

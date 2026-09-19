@@ -3,10 +3,6 @@ const request = require('supertest');
 const { createApp } = require('../src/app');
 const prisma = require('../src/shared/prisma');
 
-// SMTP не настроен в тестовом окружении — shared/mailer.js в этом случае
-// печатает код в консоль вместо отправки письма (см. mailer.js). Тесты
-// перехватывают console.log, чтобы узнать код так же, как в реальности его
-// узнал бы пользователь из письма.
 function captureCode(logSpy) {
   const call = logSpy.mock.calls.find(args => String(args[0]).includes('[dev] Письмо для'));
   const match = call && String(call[0]).match(/Код для подтверждения email: (\d{6})/);
@@ -84,9 +80,6 @@ describe('Email verification', () => {
     expect(ok.status).toBe(200);
     expect(ok.body.user.emailVerified).toBe(true);
 
-    // Повторный вызов тем же (уже использованным) кодом — не ошибка, а
-    // идемпотентный успех: строка EmailVerification уже удалена, но
-    // пользователь и так подтверждён.
     const again = await request(app)
       .post('/api/email-verification/verify')
       .set('Authorization', `Bearer ${token}`)
@@ -129,7 +122,6 @@ describe('Email verification', () => {
     expect(res.body.sent).toBe(false);
     expect(res.body.retryAfterSeconds).toBeGreaterThan(0);
     expect(res.body.retryAfterSeconds).toBeLessThanOrEqual(60);
-    // Новое письмо не печаталось — кулдаун реально не даёт отправить повторно.
     expect(sentAgain).toBeNull();
   });
 
@@ -147,7 +139,6 @@ describe('Email verification', () => {
       expect(wrong.status).toBe(400);
     }
 
-    // Шестая попытка — уже правильным кодом, но лимит попыток исчерпан.
     const res = await request(app)
       .post('/api/email-verification/verify')
       .set('Authorization', `Bearer ${token}`)
@@ -157,9 +148,6 @@ describe('Email verification', () => {
   });
 
   describe('Обязательное подтверждение (requireVerifiedEmail)', () => {
-    // Один пользователь на все три теста — так код из регистрации остаётся
-    // валиден до теста «после подтверждения» (у resend есть 60-секундный
-    // кулдаун, повторная регистрация/resend в отдельном тесте его бы задели).
     let token;
     let code;
 
@@ -195,8 +183,6 @@ describe('Email verification', () => {
     });
 
     it('покупка тоже отклоняется до подтверждения', async () => {
-      // Задание с ценой не заводим — 403 от requireVerifiedEmail наступает
-      // раньше, чем сервис вообще посмотрит на assignmentId.
       const res = await request(app)
         .post('/api/payments/create')
         .set('Authorization', `Bearer ${token}`)

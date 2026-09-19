@@ -1,9 +1,3 @@
-// Сборка сайта с пререндером лендинга: обычный клиентский `vite build`, затем
-// SSR-сборка src/entry-server.jsx, рендер <App/> в строку и вставка результата
-// в dist/index.html вместо пустого <div id="root">. Поисковики (особенно
-// Яндекс, который плохо выполняет JS) получают готовый HTML с h1, текстами и
-// FAQ, а браузер его гидрирует (см. src/main.jsx). Запускается через
-// `npm run build` — и локально, и в Docker.
 import {build} from 'vite';
 import {readFile, rm, writeFile} from 'node:fs/promises';
 import path from 'node:path';

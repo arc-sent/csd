@@ -1,9 +1,3 @@
-// Обёртка над нативным процессом Stockfish (UCI-протокол).
-//
-// Держим ОДИН долгоживущий процесс и очередь задач: анализ идёт по одному
-// запросу за раз, иначе вывод разных задач перемешается в общем stdout.
-// Процесс поднимается лениво (при первом запросе), чтобы сервер стартовал
-// даже без установленного движка, и перезапускается после падения/таймаута.
 const { spawn } = require('child_process');
 const { AppError } = require('../../shared/errors');
 
@@ -13,18 +7,18 @@ function createEnginePool(options) {
   const opts = options || {};
   const enginePath = opts.path;
   const engineArgs = opts.args || [];
-  const engineEnv = opts.env || null; // доп. переменные окружения для движка
+  const engineEnv = opts.env || null;
   const initTimeout = opts.initTimeout || DEFAULT_INIT_TIMEOUT;
 
-  let child = null;        // текущий процесс движка
-  let ready = null;        // промис готовности (uciok + readyok)
-  let lineHandler = null;  // обработчик строк текущей задачи
-  let queue = Promise.resolve(); // FIFO: задачи выполняются строго по очереди
+  let child = null;
+  let ready = null;
+  let lineHandler = null;
+  let queue = Promise.resolve();
   let shuttingDown = false;
 
   function killEngine() {
     if (child) {
-      try { child.kill(); } catch (e) { /* процесс мог уже умереть */ }
+      try { child.kill(); } catch (e) { }
     }
     child = null;
     ready = null;
@@ -38,7 +32,6 @@ function createEnginePool(options) {
     child.stdin.write(command + '\n');
   }
 
-  // Каждая строка stdout уходит в обработчик текущей задачи (если он есть).
   function attachReader(proc) {
     let buffer = '';
     proc.stdout.on('data', chunk => {
@@ -83,7 +76,6 @@ function createEnginePool(options) {
         reject(new AppError(503, 'Не удалось запустить Stockfish: ' + err.message));
       });
 
-      // Падение движка обнуляет состояние — следующий запрос поднимет заново.
       proc.on('exit', () => {
         if (child === proc) killEngine();
       });
@@ -113,14 +105,13 @@ function createEnginePool(options) {
         reject(err);
       }
     }).catch(err => {
-      ready = null; // чтобы следующий запрос попробовал заново
+      ready = null;
       throw err;
     });
 
     return ready;
   }
 
-  // Разбор строки "info ... score cp 25 ... pv e2e4 e7e5"
   function parseInfoLine(line) {
     const tokens = line.split(/\s+/);
     const info = {};
@@ -128,12 +119,12 @@ function createEnginePool(options) {
       if (tokens[i] === 'depth') {
         info.depth = Number(tokens[i + 1]);
       } else if (tokens[i] === 'score') {
-        const type = tokens[i + 1]; // cp | mate
+        const type = tokens[i + 1];
         const value = Number(tokens[i + 2]);
         if (type === 'cp' || type === 'mate') info.score = { type, value };
       } else if (tokens[i] === 'pv') {
         info.pv = tokens.slice(i + 1);
-        break; // pv всегда последняя секция строки
+        break;
       }
     }
     return info;
@@ -141,7 +132,7 @@ function createEnginePool(options) {
 
   function runAnalysis(params) {
     return new Promise((resolve, reject) => {
-      let best = null;   // последняя info-строка с pv (самая глубокая)
+      let best = null;
       let settled = false;
       let timer = null;
       let killTimer = null;
@@ -149,8 +140,6 @@ function createEnginePool(options) {
       const finish = (err, value) => {
         if (settled) return;
         settled = true;
-        // Гасим оба таймера: иначе «добивающий» таймер после stop продолжит
-        // держать event loop и задержит остановку процесса.
         clearTimeout(timer);
         clearTimeout(killTimer);
         lineHandler = null;
@@ -167,7 +156,6 @@ function createEnginePool(options) {
           const parts = line.split(/\s+/);
           const bestMove = parts[1];
           const ponderIndex = parts.indexOf('ponder');
-          // "(none)" и "0000" означают, что ходов нет (мат/пат).
           const hasMove = bestMove && bestMove !== '(none)' && bestMove !== '0000';
           finish(null, {
             bestMove: hasMove ? bestMove : null,
@@ -179,10 +167,8 @@ function createEnginePool(options) {
         }
       };
 
-      // Жёсткий предел: если движок не отдал bestmove — просим остановиться,
-      // а если и это не помогло, убиваем процесс, чтобы не заблокировать очередь.
       timer = setTimeout(() => {
-        try { send('stop'); } catch (e) { /* процесс уже мёртв */ }
+        try { send('stop'); } catch (e) { }
         killTimer = setTimeout(() => {
           if (!settled) {
             killEngine();
@@ -202,13 +188,11 @@ function createEnginePool(options) {
   }
 
   function analyze(params) {
-    // Ставим задачу в конец очереди — параллельных анализов не бывает.
     const task = queue.then(async () => {
       if (shuttingDown) throw new AppError(503, 'Сервер останавливается');
       await startEngine();
       return runAnalysis(params);
     });
-    // Очередь не должна вставать колом из-за упавшей задачи.
     queue = task.catch(() => {});
     return task;
   }

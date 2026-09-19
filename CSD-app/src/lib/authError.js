@@ -1,8 +1,5 @@
 import {ApiError, logout} from './api.js';
 
-// Порт CSD-app-admin/src/lib/authError.js: истёкший токен нужно обрабатывать в
-// одном месте, иначе каждый экран кабинета будет по-своему решать, что делать
-// с 401.
 let onSessionExpired = () => {};
 
 export function setSessionExpiredHandler(handler) {

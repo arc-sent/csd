@@ -14,7 +14,6 @@ const positionSchema = z
     message: 'Каждая горизонталь должна содержать 8 клеток'
   });
 
-// Конкретные потолки depth/movetime дожимает сервис — здесь только тип.
 const analyzeSchema = z.object({
   position: positionSchema,
   turn: z.enum(['w', 'b']).optional().default('w'),

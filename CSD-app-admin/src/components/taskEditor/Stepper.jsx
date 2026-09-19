@@ -3,8 +3,6 @@ import { Fragment } from 'react';
 const STEP_LABEL = { position: 'Позиция', solution: 'Решение', review: 'Проверка' };
 const STEPS = ['position', 'solution', 'review'];
 
-// Порт renderStepper() из admins/js/admin.js — кликабельно только назад
-// или на текущий шаг, не вперёд.
 export default function Stepper({ current, onNavigate }) {
   const currentIndex = STEPS.indexOf(current);
   return (

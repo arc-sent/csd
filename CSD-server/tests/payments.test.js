@@ -25,7 +25,7 @@ describe('Payments module', () => {
     });
     assignmentId = assignment.id;
     const freeAssignment = await prisma.assignment.create({
-      data: { stageId, name: 'Бесплатное задание' } // price по умолчанию 0
+      data: { stageId, name: 'Бесплатное задание' }
     });
     freeAssignmentId = freeAssignment.id;
 
@@ -35,8 +35,6 @@ describe('Payments module', () => {
       .send({ email: TEST_EMAIL, password: TEST_PASSWORD });
     token = registerRes.body.token;
     userId = registerRes.body.user.id;
-    // Покупка теперь требует подтверждённую почту (чек уходит на неё) — эти
-    // тесты не про само подтверждение (см. email-verification.test.js).
     await prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
   });
 
@@ -48,10 +46,6 @@ describe('Payments module', () => {
   });
 
   afterAll(async () => {
-    // Голые переменные вместо user.id/.assignmentId: если beforeAll упал
-    // раньше присваивания, значение остаётся undefined, а
-    // deleteMany({where:{id: undefined}}) Prisma понимает как «без фильтра» —
-    // удаляет ВСЮ таблицу. Явные проверки нужны именно из-за этого.
     if (userId) await prisma.payment.deleteMany({ where: { userId } });
     if (userId) await prisma.user.deleteMany({ where: { id: userId } });
     if (assignmentId || freeAssignmentId) {
@@ -127,7 +121,6 @@ describe('Payments module', () => {
       );
       const body = JSON.parse(options.body);
       expect(body.amount).toEqual({ value: '1200.00', currency: 'RUB' });
-      // Почта чека — из аккаунта, а не из тела запроса.
       expect(body.receipt.customer).toEqual({ email: TEST_EMAIL });
       expect(body.metadata).toEqual({ assignmentId, userId, email: TEST_EMAIL });
 
@@ -188,7 +181,6 @@ describe('Payments module', () => {
 
       const res = await request(app)
         .post('/api/payments/webhook')
-        // Статус в теле заведомо поддельный — сервис обязан его игнорировать.
         .send({ event: 'payment.succeeded', object: { id: 'payment-456', status: 'canceled' } });
 
       expect(res.status).toBe(200);
@@ -216,7 +208,6 @@ describe('Payments module', () => {
       expect((await send()).status).toBe(200);
       expect((await send()).status).toBe(200);
 
-      // Задание в кабинете должно появиться ровно один раз.
       const cabinet = await request(app)
         .get('/api/account/assignments')
         .set('Authorization', `Bearer ${token}`);

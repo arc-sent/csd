@@ -2,12 +2,6 @@ import {useEffect, useRef, useState} from 'react';
 import {ModalShell, submitClass} from './ModalShell.jsx';
 import {TermsContent} from './TermsContent.jsx';
 
-/**
- * Пользовательское соглашение перед регистрацией. Кнопка «принимаю» активна
- * только после прокрутки текста до конца — так согласие не выглядит
- * автоматическим кликом мимо документа. Если текст целиком помещается на
- * экран (прокручивать нечего), кнопка доступна сразу.
- */
 export function TermsModal({onAccept, onClose, onDecline, readOnly = false}) {
   const scrollRef = useRef(null);
   const [readAll, setReadAll] = useState(false);

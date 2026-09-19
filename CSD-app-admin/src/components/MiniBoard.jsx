@@ -1,6 +1,5 @@
 import { PIECE_ART } from '../lib/pieceArt.js';
 
-// Порт miniBoardHTML() из admins/js/levels.js — мини-превью 8x8 для карточки задачи.
 export default function MiniBoard({ position }) {
   const squares = [];
   for (let r = 0; r < 8; r++) {

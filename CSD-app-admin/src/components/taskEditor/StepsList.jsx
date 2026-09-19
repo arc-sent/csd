@@ -3,11 +3,7 @@ import { chessRules } from '../../lib/chessRules.js';
 import { moveToUciOrEmpty, tokensToSteps, fenChainFor } from '../../lib/solutionNotation.js';
 import MoveLabel from './MoveLabel.jsx';
 
-// Порт renderStepsList()+«Всё решение» (renderFullAlgoInput/applyFullAlgoInput)
-// из admins/js/solution-builder.js.
 export default function StepsList({ draft, dispatch, onEdit, onDelete, notify }) {
-  // Позиция ДО каждого шага (для player) и ДО ответа (после хода ученика) —
-  // нужно, чтобы подписать, какая фигура ходит.
   const stepPositions = useMemo(() => {
     const beforePlayer = [];
     const beforeReply = [];
@@ -21,8 +17,6 @@ export default function StepsList({ draft, dispatch, onEdit, onDelete, notify })
     return { beforePlayer, beforeReply };
   }, [draft.position, draft.steps]);
 
-  // Та же цепочка, но в FEN — по ней MoveLabel считает настоящую нотацию
-  // (+/#/x/=/O-O), а не просто "откуда → куда".
   const stepFens = useMemo(
     () => fenChainFor(draft),
     [draft.position, draft.turn, draft.castling, draft.enPassant, draft.steps]

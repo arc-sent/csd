@@ -5,8 +5,6 @@ import { chessRules } from '../../lib/chessRules.js';
 import { advanceFen } from '../../lib/solutionNotation.js';
 import MoveLabel from './MoveLabel.jsx';
 
-// Порт admins/js/engine.js — «Рассчитать лучшее решение»: показывает вариант
-// движка как черновик, ничего не применяет автоматически.
 function scoreText(score, turn) {
   if (!score) return '—';
   const side = turn === 'b' ? 'чёрных' : 'белых';

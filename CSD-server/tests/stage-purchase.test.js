@@ -1,8 +1,6 @@
 const { createPaymentSchema } = require('../src/modules/payments/payments.validation');
 const { grantBodySchema } = require('../src/modules/users/users.validation');
 
-// Ровно одно из assignmentId/stageId — иначе платёж (или выдача) был бы либо
-// за «ничего», либо неоднозначным.
 describe('Покупка и выдача этапа: валидация тела запроса', () => {
   test.each([
     ['платёж за задание', createPaymentSchema, { assignmentId: 'a' }, true],

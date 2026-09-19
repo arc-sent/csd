@@ -4,8 +4,8 @@ const empty = () => Array.from({ length: 8 }, () => Array(8).fill(''));
 
 function withKings(extra = {}) {
   const p = empty();
-  p[7][4] = '♔'; // e1
-  p[0][4] = '♚'; // e8
+  p[7][4] = '♔';
+  p[0][4] = '♚';
   Object.entries(extra).forEach(([square, piece]) => {
     const [r, c] = rules.parseSquare(square);
     p[r][c] = piece;
@@ -118,7 +118,6 @@ describe('легальность позиции', () => {
   });
 
   it('отклоняет шах стороне, которая не ходит', () => {
-    // Белый ферзь на e2 бьёт чёрного короля на e8 при ходе белых.
     const res = rules.validatePosition({
       position: withKings({ e2: '♕' }), turn: 'w', castling: NO_CASTLING
     });
@@ -127,7 +126,6 @@ describe('легальность позиции', () => {
   });
 
   it('разрешает шах той стороне, которая ходит', () => {
-    // Та же позиция, но ход чёрных — король под шахом легально.
     const res = rules.validatePosition({
       position: withKings({ e2: '♕' }), turn: 'b', castling: NO_CASTLING
     });
@@ -184,7 +182,6 @@ describe('взятие на проходе', () => {
   });
 
   it('отклоняет клетку взятия на проходе, если пешка не сделала двойной ход', () => {
-    // Пешка стоит не на 5-й/4-й горизонтали — сюда пройти на проходе нельзя.
     const res = rules.validatePosition({
       position: withKings({ e3: '♟' }), turn: 'w', castling: NO_CASTLING, enPassant: 'e6'
     });

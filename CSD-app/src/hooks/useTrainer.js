@@ -15,11 +15,8 @@ const prefersReducedMotion = () =>
   window.matchMedia &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Подпись «чей ход» больше не константа: ученик может играть и за чёрных.
 const turnTitle = fen => (sideToMove(fen) === 'b' ? 'Ход чёрных' : 'Ход белых');
 
-// Кадр истории хранит FEN (в нём очередь хода, права на рокировку и поле
-// взятия на проходе) и выведенный из него массив для отрисовки доски.
 const makeFrame = (fen, move, kind) => ({fen, position: positionFromFen(fen), move, kind});
 
 const initialCore = level => {
@@ -37,10 +34,6 @@ const initialCore = level => {
   };
 };
 
-/**
- * Экран решения задачи (ТЗ 4.3): ход тапами и перетаскиванием, проверка по
- * алгоритму уровня, ответ соперника, история ходов и показ решения.
- */
 export function useTrainer(level, notify, onMistake) {
   const [core, setCore] = useState(() => initialCore(level));
   const [selected, setSelected] = useState(null);
@@ -66,7 +59,6 @@ export function useTrainer(level, notify, onMistake) {
       ? level.steps[core.stepIndex].player.from
       : null;
 
-  // ── Анимация хода: фигуру рисуем на новом поле и «отматываем» к старому.
   const squareEl = coords =>
     boardRef.current?.querySelector(`[data-r="${coords[0]}"][data-c="${coords[1]}"]`);
 
@@ -98,8 +90,6 @@ export function useTrainer(level, notify, onMistake) {
         setCore(prev => {
           const current = prev.frames[prev.frames.length - 1];
           const nextFen = applyMove(current.fen, reply);
-          // Нелегальный ответ в сценарии сюда не доходит: сервер помечает такие
-          // задачи недоступными (level-support.js проигрывает всё решение).
           if (!nextFen) return {...prev, replyPending: false};
           const fromRect = squareEl(reply.from)?.getBoundingClientRect();
           if (fromRect) pendingAnimation.current = {move: reply, from: fromRect};
@@ -114,7 +104,6 @@ export function useTrainer(level, notify, onMistake) {
         });
       }, REPLY_DELAY);
     },
-    // squareEl читает ref, пересоздавать колбэк не нужно
     []
   );
 
@@ -132,8 +121,6 @@ export function useTrainer(level, notify, onMistake) {
         expected.to[0] === to[0] &&
         expected.to[1] === to[1];
 
-      // Фигуру превращения берём из сценария: у верного хода она задана
-      // автором, у произвольного — ферзь (см. applyMove в lib/chess.js).
       const move = correct && expected.promotion ? {from, to, promotion: expected.promotion} : {from, to};
       const nextFen = applyMove(frame.fen, move);
       if (!nextFen) return;
@@ -167,11 +154,6 @@ export function useTrainer(level, notify, onMistake) {
 
         const stepIndex = prev.stepIndex + 1;
         if (stepIndex >= level.steps.length) {
-          // level.result — либо настоящий результат партии (1-0/0-1/1/2-1/2,
-          // мат/ничья), либо авторская оценка позиции без мата (±/∓/=,
-          // «этого достаточно, чтобы засчитать решение»). Админ проставляет
-          // его в ReviewView.jsx; не у всех задач он задан, поэтому в
-          // заголовок попадает, только если есть.
           const title = level.result ? `Уровень пройден · ${level.result}` : 'Уровень пройден';
           return {
             ...next,
@@ -192,14 +174,12 @@ export function useTrainer(level, notify, onMistake) {
         const reply = level.steps[core.stepIndex].reply;
         if (reply) scheduleReply(reply);
       } else {
-        // Ошибки уходят на сервер: из них считается честная точность в кабинете.
         onMistake?.();
       }
     },
     [canPlay, frame.fen, frame.position, core.stepIndex, level, scheduleReply, onMistake]
   );
 
-  // ── Ход тапами «откуда → куда» и перетаскиванием — оба сценария из ТЗ.
   const onPointerDown = event => {
     if (event.button !== 0 && event.pointerType === 'mouse') return;
     const square = event.target.closest('.square');
@@ -207,16 +187,11 @@ export function useTrainer(level, notify, onMistake) {
     const r = Number(square.dataset.r);
     const c = Number(square.dataset.c);
 
-    // «Своя ли это фигура» больше не проверяется по цвету: chess.js возвращает
-    // ходы только для стороны, чей ход, — поэтому пустой список означает и
-    // чужую фигуру, и пустую клетку, и связанную фигуру. Такой клик считается
-    // выбором клетки назначения для уже поднятой фигуры.
     if (legalMoves(frame.fen, r, c).length === 0) {
       if (selected) attemptMove(selected, [r, c]);
       return;
     }
 
-    // Фигура выделяется сразу по нажатию — ходы видны с первого клика.
     const wasSelected = selected && selected[0] === r && selected[1] === c;
     setSelected([r, c]);
     dragRef.current = {
@@ -227,7 +202,6 @@ export function useTrainer(level, notify, onMistake) {
       ghost: null,
       wasSelected
     };
-    // Захват указателя не критичен: если браузер откажет, ход всё равно пройдёт
     try {
       boardRef.current?.setPointerCapture(event.pointerId);
     } catch {}
@@ -267,7 +241,6 @@ export function useTrainer(level, notify, onMistake) {
       boardRef.current?.releasePointerCapture?.(event.pointerId);
     } catch {}
 
-    // Позиция «призрака» до удаления — от неё фигура доедет до поля.
     const ghostRect = drag.ghost ? drag.ghost.getBoundingClientRect() : null;
     drag.ghost?.remove();
     squareEl(drag.from)?.classList.remove('dragging');
@@ -282,7 +255,6 @@ export function useTrainer(level, notify, onMistake) {
       return;
     }
 
-    // Повторное нажатие по уже выбранной фигуре снимает выделение.
     if (drag.wasSelected) setSelected(null);
   };
 
@@ -329,8 +301,6 @@ export function useTrainer(level, notify, onMistake) {
         stepIndex = Math.max(0, stepIndex - 1);
         feedback = {state: 'idle', note: 'Последний ход отменён.'};
       }
-      // Заголовок — по позиции, к которой вернулись: после отмены ответа
-      // соперника ходить снова ученику, а после отмены своего хода — нет.
       feedback.title = turnTitle(frames[frames.length - 1].fen);
 
       return {
@@ -356,22 +326,17 @@ export function useTrainer(level, notify, onMistake) {
     notify?.('Позиция сброшена к начальной.');
   };
 
-  // По ТЗ «Решение» только выводит координаты хода, не выполняя его на доске.
   const showSolution = () => {
     setCore(prev => ({...prev, solutionShown: true}));
     notify?.('Решение показано полностью.');
   };
 
-  // Позиция ДО каждого хода (для эмодзи фигуры в подписи) — реплеим решение
-  // с начальной позиции уровня один раз за весь список шагов.
   const solutionLines = useMemo(() => {
     let fen = toFen(level);
     return level.steps.map((step, index) => {
       const beforePlayer = positionFromFen(fen);
       const playerBeforeFen = fen;
       const afterPlayerFen = applyMove(fen, step.player);
-      // Битое решение сюда не попадает (сервер такие задачи не отдаёт как
-      // играбельные), но подстраховка дешевле, чем падение на пустом FEN.
       if (!afterPlayerFen) {
         return {index: index + 1, playerMove: step.player, playerBefore: beforePlayer, playerBeforeFen};
       }
@@ -391,8 +356,6 @@ export function useTrainer(level, notify, onMistake) {
 
   return {
     boardRef,
-    // Сторона ученика — та, чей ход в начальной позиции. По ней разворачивается
-    // доска и подписывается «ход белых/чёрных» в шапке панели.
     side: sideToMove(core.frames[0].fen),
     position: frame.position,
     lastMove: frame.move,

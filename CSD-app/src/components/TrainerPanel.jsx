@@ -17,41 +17,20 @@ const feedbackTone = {
 };
 const feedbackIcon = {idle: '○', success: '✓', error: '!'};
 
-/**
- * Панель тренажёра: доска, подписи ходов, обратная связь, управление и
- * прогресс. Используется и демо-секцией лендинга, и экраном решения в
- * кабинете — одна реализация на оба места, ноль риска расхождений.
- * Палитра целиком на токенах (--color-panel*), поэтому панель следует теме
- * сайта: светлая карточка в светлой теме, тёмная — в тёмной.
- *
- * ВАЖНО про смену задачи: useTrainer инициализируется через
- * useState(() => initialCore(level)) — ленивый инициализатор не перезапустится
- * при смене пропса level. Вызывающая сторона обязана ремонтировать компонент
- * через key={level.id}, иначе на доске останется предыдущая задача.
- */
 export function TrainerPanel({level, notify, title, eyebrow, subtitle, onSolved, onMistake}) {
   const trainer = useTrainer(level, notify, onMistake);
-  // Доска разворачивается, когда ученик играет чёрными.
   const flipped = trainer.side === 'b';
   const reportedRef = useRef(false);
 
-  // «Решено» отправляем ровно один раз за монтирование. trainer.solved
-  // двигается только настоящими верными ходами: кнопка «Решение» лишь
-  // подсвечивает подсказку и уровень не засчитывает.
   useEffect(() => {
     if (!trainer.solved || reportedRef.current) return;
     reportedRef.current = true;
     onSolved?.({usedSolution: trainer.solutionShown});
   }, [trainer.solved, trainer.solutionShown, onSolved]);
 
-  // text-ink на панели обязателен: демо-секция лендинга — тёмная полоса со
-  // светлым текстом, и без своего цвета панель наследовала бы его, оставаясь
-  // при этом светлой в светлой теме.
   return (
     <Reveal delay className="border border-panel-line rounded-3xl overflow-hidden bg-panel text-ink shadow-card">
       <div className="flex flex-col lg:grid lg:grid-cols-[1.06fr_.7fr]">
-        {/* На узких экранах панель «растворяется»: её содержимое
-            становится элементами общей колонки и получает свой порядок */}
         <div className="contents lg:col-start-2 lg:flex lg:flex-col lg:px-[30px] lg:py-[34px]">
           <div className="order-1 lg:order-none px-[15px] pt-[13px] sm:px-5 sm:pt-[18px] lg:p-0 text-[9px] uppercase tracking-[.12em] text-muted">
             <span className="font-display text-sm font-extrabold text-ink">{title}</span>
@@ -67,7 +46,6 @@ export function TrainerPanel({level, notify, title, eyebrow, subtitle, onSolved,
             </p>
           </div>
 
-          {/* Координаты хода и решение — в две колонки, чтобы не тянуть высоту */}
           <div className="order-4 lg:order-none grid grid-cols-2 gap-3 sm:gap-3.5 px-[15px] pt-[9px] sm:px-5 sm:pt-3.5 lg:flex lg:flex-col lg:gap-0 lg:p-0">
             <div className="lg:py-5 lg:text-[11px]">
               <span className={`${fieldLabel} mb-1.5`}>Ход по координатам</span>
@@ -189,7 +167,6 @@ export function TrainerPanel({level, notify, title, eyebrow, subtitle, onSolved,
           </div>
         </div>
 
-        {/* Доска: по высоте не больше 44vh, но не мельче 240px */}
         <div className="order-3 lg:order-none lg:col-start-1 lg:row-start-1 flex flex-col justify-center p-2.5 sm:p-4 lg:p-6 bg-panel-deep">
           <BoardFrame
             className="w-full mx-auto max-w-[min(100%,max(280px,44vh))] lg:max-w-none"

@@ -1,7 +1,5 @@
-// Хранилище — REST-клиент для этапов/заданий/задач, платежей и аккаунтов.
 import { request } from './api.js';
 
-// ---------- Этапы ----------
 export function loadStages() {
   return request('/stages');
 }
@@ -25,7 +23,6 @@ export function setStageStatus(id, status) {
   return request('/stages/' + id + '/status', { method: 'PATCH', body: JSON.stringify({ status }) });
 }
 
-// ---------- Задания ----------
 export function loadAssignments(stageId) {
   return request('/assignments' + (stageId ? '?stageId=' + encodeURIComponent(stageId) : ''));
 }
@@ -49,7 +46,6 @@ export function setAssignmentStatus(id, status) {
   return request('/assignments/' + id + '/status', { method: 'PATCH', body: JSON.stringify({ status }) });
 }
 
-// ---------- Задачи ----------
 export function loadLevels(assignmentId) {
   return request('/levels' + (assignmentId ? '?assignmentId=' + encodeURIComponent(assignmentId) : ''));
 }
@@ -57,8 +53,6 @@ export function getLevel(id) {
   return request('/levels/' + id);
 }
 function levelPayload(level) {
-  // На бэк уходят только «свои» поля уровня — id/createdAt/updatedAt сервер
-  // проставляет сам. Порт levelPayload() из admins/js/board-common.js.
   const {
     name, description, difficulty, category, position, turn, castling,
     enPassant, halfmoveClock, fullmoveNumber, steps, result, status, assignmentId
@@ -84,7 +78,6 @@ export function setLevelStatus(id, status) {
   return request('/levels/' + id + '/status', { method: 'PATCH', body: JSON.stringify({ status }) });
 }
 
-// ---------- Платежи ----------
 function query(params) {
   const pairs = Object.entries(params).filter(([, v]) => v);
   return pairs.length ? '?' + pairs.map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&') : '';
@@ -93,21 +86,16 @@ function query(params) {
 export function loadPayments({ q, status, assignmentId } = {}) {
   return request('/payments' + query({ q, status, assignmentId }));
 }
-// Точечный перепрос статуса у ЮKassa. Фоном статусы обновляются и сами
-// (server: payments.sync.js), кнопка — чтобы не ждать следующего тика.
 export function refreshPayment(id) {
   return request('/payments/' + id + '/refresh', { method: 'POST' });
 }
 
-// ---------- Аккаунты и ручная выдача ----------
 export function loadUsers({ q } = {}) {
   return request('/users' + query({ q }));
 }
 export function getUser(id) {
   return request('/users/' + id);
 }
-// Ровно одно из assignmentId/stageId. Для этапа сервер возвращает
-// { granted, skipped }: сколько заданий выдано и сколько уже было у аккаунта.
 export function grantAssignment(userId, { assignmentId, stageId, note }) {
   return request('/users/' + userId + '/grants', {
     method: 'POST',

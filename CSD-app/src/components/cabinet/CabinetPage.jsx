@@ -66,9 +66,6 @@ export function CabinetPage({route, navigate}) {
     loadDashboard();
   }, [loadAssignments, loadDashboard]);
 
-  // Часовой пояс браузера уходит на сервер один раз за визит: по нему считается
-  // серия в местных днях. Молча глушим ошибку — это фоновая деталь, из-за
-  // которой кабинет не должен показывать тост.
   useEffect(() => {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (timeZone) saveTimeZone(timeZone).catch(() => {});
@@ -80,8 +77,6 @@ export function CabinetPage({route, navigate}) {
       .catch(() => setStagesFailed(true));
   }, []);
 
-  // Список задач нужен и экрану списка, и экрану решения (для «предыдущая/
-  // следующая»), поэтому грузится на уровне оболочки.
   useEffect(() => {
     if (!route.assignmentId) {
       setLevelsData(null);
@@ -97,9 +92,6 @@ export function CabinetPage({route, navigate}) {
       })
       .catch(err => {
         if (cancelled) return;
-        // 404 — задания с таким id нет (или оно не куплено): показываем
-        // страницу «не найдено», а не крутим спиннер бесконечно и не гасим
-        // это тостом, как обычную ошибку сети.
         if (err instanceof ApiError && err.status === 404) {
           setLevelsNotFound(true);
         } else {
@@ -111,8 +103,6 @@ export function CabinetPage({route, navigate}) {
     };
   }, [route.assignmentId, notify]);
 
-  // После решения задачи обновляем отметку локально, чтобы список и счётчики
-  // не ждали перезагрузки страницы.
   const markSolvedLocally = useCallback(
     levelId => {
       setLevelsData(prev =>
@@ -133,10 +123,6 @@ export function CabinetPage({route, navigate}) {
 
   const ownedById = useMemo(() => new Map((assignments || []).map(a => [a.id, a])), [assignments]);
 
-  // Этап выводится, а не хранится «первым пришедшим»: список этапов и список
-  // купленного грузятся параллельно, и запись выбора по факту загрузки давала
-  // гонку — шапка дашборда показывала один этап, а сетка под ней другой.
-  // Без явного выбора открываем этап последней покупки.
   const stage = useMemo(() => {
     if (!stages || stages.length === 0) return null;
     const chosen = stageId && stages.find(s => s.id === stageId);
@@ -150,8 +136,6 @@ export function CabinetPage({route, navigate}) {
       <StageSwitcher stages={stages} value={stage.id} onChange={setStageId} pulse />
     ) : null;
 
-  // Отступ сверху меньше секционного (74/104px): у лендинга это воздух между
-  // экранами, а кабинет — рабочий экран, и первый блок не должен уезжать вниз.
   return (
     <section className="bg-bg pt-9 pb-[74px] sm:pt-12 sm:pb-[104px]">
       <div className={container}>
@@ -189,9 +173,6 @@ export function CabinetPage({route, navigate}) {
           <LoadingState text="Загружаем задание…" />
         )}
 
-        {/* Единый вертикальный ритм: отступы между блоками задаёт контейнер, а
-            не сами компоненты — иначе соседние mb-* складываются или, наоборот,
-            блоки слипаются (достижения так вплотную прилипали к сетке). */}
         {!route.assignmentId && (
           <div className="space-y-10 sm:space-y-12">
             <ProfileHeader />

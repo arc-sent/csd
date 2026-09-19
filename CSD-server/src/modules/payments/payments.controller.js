@@ -16,16 +16,12 @@ async function createHandler(req, res, next) {
 async function webhookHandler(req, res, next) {
   try {
     await paymentsService.handleWebhook(req.body);
-    // ЮKassa ретраит вебхук, если не получит 200 — подтверждаем приём сразу
-    // после того, как сами всё проверили и обновили запись.
     res.status(200).json({ received: true });
   } catch (err) {
     next(err);
   }
 }
 
-// Админский журнал платежей. Фильтры приходят строкой запроса, пустые
-// значения отбрасываем — validate() в проекте разбирает только тело.
 async function listHandler(req, res, next) {
   try {
     const { q, status, assignmentId } = req.query;

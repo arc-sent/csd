@@ -4,8 +4,6 @@ const bcrypt = require('bcryptjs');
 const { createApp } = require('../src/app');
 const prisma = require('../src/shared/prisma');
 
-// SMTP не настроен в тестовом окружении (см. tests/jest.setup.js) —
-// shared/mailer.js печатает код в консоль вместо отправки письма.
 function captureCode(logSpy) {
   const call = logSpy.mock.calls.find(args => String(args[0]).includes('[dev] Письмо для'));
   const match = call && String(call[0]).match(/Код для восстановления пароля: (\d{6})/);

@@ -3,12 +3,6 @@ import {useAuthContext} from '../context/AuthContext.jsx';
 import {useToast} from '../hooks/useToast.jsx';
 import {container, sectionPad} from './ui.jsx';
 
-// Обязательное подтверждение почты (см. account.guard.js.requireVerifiedEmail
-// на сервере) — показывается вместо кабинета, пока status === 'unverified'
-// (App.jsx), тем же местом, что и CabinetGate для незалогиненных.
-//
-// Своя, не общая с ModalShell.jsx разметка поля/кнопки: там inputClass и
-// submitClass жёстко на w-full — здесь код узкий, а кнопки в один ряд.
 export function EmailVerificationGate() {
   const {user, verifyEmail, resendVerification} = useAuthContext();
   const notify = useToast();

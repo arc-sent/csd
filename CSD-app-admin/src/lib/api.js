@@ -1,6 +1,3 @@
-// Тонкий клиент к бэкенду ChessSchoolDinamik API: хранение JWT-токена и обёртка над
-// fetch, которая прокидывает Authorization и приводит ошибки к единому виду.
-// 1:1 порт admins/js/api-client.js под ES-модуль.
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 const TOKEN_KEY = 'chesslab_admin_token';
 
@@ -20,8 +17,6 @@ export class ApiError extends Error {
   constructor(status, message, details) {
     super(message);
     this.status = status;
-    // details — подробности от бэкенда (например, список ошибок легальности),
-    // чтобы UI мог показать их пользователю, а не только общий текст.
     this.details = details || null;
   }
 }
@@ -39,7 +34,6 @@ export async function request(path, options = {}) {
   try {
     body = await res.json();
   } catch (e) {
-    // тело могло быть пустым — это нормально для некоторых ответов
   }
 
   if (!res.ok) {
@@ -69,8 +63,6 @@ export function logout() {
   clearToken();
 }
 
-// ---------- Аккаунт админа: смена пароля/email ----------
-
 export function changePassword(newPassword) {
   return request('/auth/password', { method: 'PUT', body: JSON.stringify({ newPassword }) });
 }
@@ -86,8 +78,6 @@ export async function verifyEmailChange(code) {
 export function isAuthenticated() {
   return Boolean(getToken());
 }
-
-// ---------- Восстановление пароля до входа (публичное, без токена) ----------
 
 export function requestPasswordReset(email) {
   return request('/auth/password-reset/request', { method: 'POST', body: JSON.stringify({ email }) });

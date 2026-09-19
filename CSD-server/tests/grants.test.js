@@ -48,8 +48,6 @@ describe('Ручная выдача доступа', () => {
       .post('/api/account/register')
       .send({ email: BUYER_EMAIL, password: PASSWORD });
     buyerId = buyer.body.user.id;
-    // Кабинет теперь требует подтверждённую почту — эти тесты не про само
-    // подтверждение (см. email-verification.test.js).
     await prisma.user.updateMany({ where: { id: { in: [userId, buyerId] } }, data: { emailVerifiedAt: new Date() } });
     await prisma.payment.create({
       data: {
@@ -64,9 +62,6 @@ describe('Ручная выдача доступа', () => {
   });
 
   afterAll(async () => {
-    // Голые переменные: если что-то в beforeAll упало раньше присваивания,
-    // значение остаётся undefined, а deleteMany({where:{id: undefined}})
-    // Prisma понимает как «без фильтра» — удаляет всю таблицу целиком.
     if (assignmentId) await prisma.grant.deleteMany({ where: { assignmentId } });
     if (assignmentId) await prisma.payment.deleteMany({ where: { assignmentId } });
     await prisma.user.deleteMany({ where: { email: { in: [USER_EMAIL, BUYER_EMAIL] } } });
@@ -138,8 +133,6 @@ describe('Ручная выдача доступа', () => {
   });
 
   it('у купившего доступ отзыв выдачи ничего не отбирает', async () => {
-    // Покупателю задание ещё и выдали руками — источником всё равно считается
-    // оплата, и отзыв выдачи не должен закрыть оплаченный доступ.
     const created = await grant(buyerId, { assignmentId });
     expect(created.status).toBe(409);
 

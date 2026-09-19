@@ -6,8 +6,6 @@ const { analyzeHandler } = require('./engine.controller');
 
 const router = Router();
 
-// Анализ заметно тяжелее обычного CRUD, поэтому закрыт той же авторизацией —
-// иначе открытый эндпоинт легко превратить в вектор DoS.
 router.use(authGuard);
 router.post('/analyze', validate(analyzeSchema), analyzeHandler);
 

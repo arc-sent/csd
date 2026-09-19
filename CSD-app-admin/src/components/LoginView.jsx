@@ -2,13 +2,8 @@ import { useState } from 'react';
 import PasswordInput from './PasswordInput.jsx';
 import * as api from '../lib/api.js';
 
-// Восстановление пароля до входа — три шага (email → код → новый пароль),
-// 1:1 порт CSD-app/AuthModal.jsx.ResetPasswordForm под публичные
-// /auth/password-reset/* эндпоинты (см. CSD-server/src/modules/auth). Поле
-// нового пароля показывается только на третьем шаге, после того как код уже
-// проверен сервером и обменян на resetToken — тот же принцип, что на сайте.
 function ResetPasswordForm({ initialEmail, onDone, onCancel }) {
-  const [step, setStep] = useState('request'); // 'request' | 'code' | 'newPassword'
+  const [step, setStep] = useState('request');
   const [email, setEmail] = useState(initialEmail || '');
   const [code, setCode] = useState('');
   const [resetToken, setResetToken] = useState('');
@@ -22,8 +17,6 @@ function ResetPasswordForm({ initialEmail, onDone, onCancel }) {
     setError('');
     setSubmitting(true);
     try {
-      // Сервер всегда отвечает {sent: true} вне зависимости от того,
-      // существует ли email — так и должно быть, это не ошибка.
       await api.requestPasswordReset(email.trim());
       setStep('code');
     } catch (err) {
@@ -127,7 +120,7 @@ function ResetPasswordForm({ initialEmail, onDone, onCancel }) {
 }
 
 export default function LoginView({ onLogin, error }) {
-  const [mode, setMode] = useState('login'); // 'login' | 'reset'
+  const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -142,7 +135,6 @@ export default function LoginView({ onLogin, error }) {
       await onLogin(email.trim(), password);
       setPassword('');
     } catch (err) {
-      // ошибка уже отражена в error (см. useAuth)
     } finally {
       setSubmitting(false);
     }

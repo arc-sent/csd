@@ -4,11 +4,6 @@ export const label = 'text-[12px] tracking-[.16em] uppercase font-extrabold';
 export const heading =
   'font-display text-[39px] sm:text-[clamp(36px,4.5vw,60px)] leading-[.98] tracking-[-.06em] mt-[11px] mb-0 max-w-[820px]';
 
-// Единый набор классов на вариант, без пересечений с базой: у Tailwind
-// порядок правил в собранном CSS не совпадает с порядком классов в JSX,
-// поэтому конфликтующие utility-классы (min-h-[52px] и min-h-[42px] и т.п.)
-// переопределяют друг друга непредсказуемо. small раньше терял свой размер
-// из-за этого — кнопка в шапке рендерилась 52px вместо 42px.
 const buttonBase =
   'inline-flex items-center justify-center gap-3 font-extrabold transition duration-200 [transition-timing-function:ease] hover:-translate-y-0.5';
 
@@ -26,13 +21,6 @@ export function Button({variant = 'primary', className = '', children, ...rest})
   );
 }
 
-/**
- * Заголовок секции: слева название и подзаголовок, справа пояснение.
- * spacing — отдельным пропом, а не через className: у Tailwind порядок
- * классов в JSX не решает конфликт (mb-[50px] против mb-7), выигрывает тот,
- * что окажется позже в собранном CSS. Поэтому отступ подставляется в строку
- * классов, а не дописывается вторым mb-*.
- */
 export function SectionIntro({label: labelText, title, note, split = false, className = '', badge, spacing = 'mb-[50px]'}) {
   return (
     <div
@@ -47,9 +35,6 @@ export function SectionIntro({label: labelText, title, note, split = false, clas
     >
       <div>
         {badge}
-        {/* В оригинале .section-label цвет не задаёт и наследует чёрный от
-            body — серым он становится только внутри .demo/.cta-box, где
-            это переопределяется отдельно (см. Demo.jsx и FinalCta ниже). */}
         <span className={`${label} text-ink`}>{labelText}</span>
         <h2 className={heading}>{title}</h2>
       </div>

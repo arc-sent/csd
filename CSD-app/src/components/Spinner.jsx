@@ -1,6 +1,3 @@
-// Единственный спиннер на весь сайт — везде, где кабинет ждёт ответ сервера
-// (список заданий, задание, задача, проверка входа), используется он, а не
-// текст «Загружаем…» сам по себе.
 export function Spinner({className = 'w-5 h-5', label = 'Загрузка'}) {
   return (
     <svg
@@ -16,11 +13,6 @@ export function Spinner({className = 'w-5 h-5', label = 'Загрузка'}) {
   );
 }
 
-/**
- * Спиннер + подпись, для мест, где раньше висел одинокий
- * <p className="text-faint">Загружаем…</p> — тот же текст, но с индикатором,
- * а не только словами.
- */
 export function LoadingState({text, className = 'py-10'}) {
   return (
     <div className={`flex flex-col items-center gap-3 text-center ${className}`}>

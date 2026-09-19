@@ -1,12 +1,7 @@
 const { z } = require('zod');
 
-// Нормализация email живёт здесь, а не в сервисе: middlewares/validate.js
-// пишет result.data обратно в req.body, поэтому trim+lowercase случается
-// ровно один раз и до любого кода. В БД email всегда в нижнем регистре.
 const emailField = z.string().trim().toLowerCase().email('Некорректный email');
 
-// max(72) — bcrypt молча обрезает пароль на 72 байтах; лучше явная ошибка,
-// чем пароль, у которого хвост игнорируется при проверке.
 const registerSchema = z.object({
   email: emailField,
   password: z.string().min(8, 'Пароль должен быть не короче 8 символов').max(72, 'Пароль слишком длинный'),
@@ -23,9 +18,6 @@ const progressSchema = z.object({
   usedSolution: z.boolean().optional()
 });
 
-// Часовой пояс проверяется единственным надёжным способом — попыткой создать
-// им форматтер: списка зон в стандартной библиотеке нет, а на неизвестной зоне
-// Intl бросает RangeError.
 const timeZoneSchema = z.object({
   timeZone: z.string().refine(
     value => {

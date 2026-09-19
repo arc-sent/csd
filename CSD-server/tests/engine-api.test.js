@@ -15,8 +15,6 @@ function emptyBoard() {
   return Array.from({ length: 8 }, () => Array(8).fill(''));
 }
 
-// Стартовая расстановка: на ней фейковый движок отдаёт легальный вариант
-// 1.e4 e5 2.Nf3, который реально воспроизводится через chess.js.
 function startPosition() {
   const back = ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'];
   const position = emptyBoard();
@@ -86,9 +84,9 @@ describe('Engine API', () => {
 
   it('отклоняет нелегальную позицию до обращения к движку', async () => {
     const position = emptyBoard();
-    position[7][4] = '♔'; // e1
-    position[0][4] = '♚'; // e8
-    position[6][4] = '♕'; // e2 — шах чёрному королю при ходе белых
+    position[7][4] = '♔';
+    position[0][4] = '♚';
+    position[6][4] = '♕';
     const res = await request(app)
       .post('/api/engine/analyze')
       .set('Authorization', `Bearer ${token}`)
@@ -111,13 +109,12 @@ describe('Engine API', () => {
     expect(res.body.score).toEqual({ type: 'cp', value: 34 });
     expect(res.body.fen).toBe('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
 
-    // PV из трёх ходов -> два шага, у второго ответа нет.
     expect(res.body.steps).toHaveLength(2);
     expect(res.body.steps[0]).toEqual({
-      player: { from: [6, 4], to: [4, 4] }, // e2-e4
-      reply: { from: [1, 4], to: [3, 4] }   // e7-e5
+      player: { from: [6, 4], to: [4, 4] },
+      reply: { from: [1, 4], to: [3, 4] }
     });
-    expect(res.body.steps[1].player).toEqual({ from: [7, 6], to: [5, 5] }); // g1-f3
+    expect(res.body.steps[1].player).toEqual({ from: [7, 6], to: [5, 5] });
     expect(res.body.steps[1].reply).toBeNull();
     expect(res.body.warnings).toEqual([]);
   });

@@ -1,8 +1,6 @@
 import {label} from '../ui.jsx';
 import {plural} from '../../lib/plural.js';
 
-// Вс, Пн, Вт, Ср, Чт, Пт, Сб — по getUTCDay(), тем же, каким на сервере
-// считаются дни решений (dateKey из cabinet.service.js).
 const WEEKDAY_INITIALS = ['В', 'П', 'В', 'С', 'Ч', 'П', 'С'];
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -86,7 +84,6 @@ function StreakCard({streakDays, longestStreak, weekActivity}) {
 
   return (
     <div className={`${cardBase} relative overflow-hidden bg-invert text-invert-fg`}>
-      {/* Декоративная дуга — та же деталь, что и в макете кабинета. */}
       <span className="pointer-events-none absolute -right-14 -top-20 w-[210px] h-[210px] rounded-full border border-invert-fg/10" />
 
       <div className="flex items-center justify-between gap-3 text-[9px] uppercase tracking-[.12em] text-invert-muted">

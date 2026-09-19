@@ -1,9 +1,6 @@
 import {useEffect, useRef} from 'react';
 import {label} from '../ui.jsx';
 
-// Данные с сервера не несут иконку — ключ достижения зашит там же, где правила
-// (CSD-server/src/modules/account/achievements.js), поэтому смысловая пиктограмма
-// подбирается тут же.
 const ICONS = {
   'first-solve': '♟️',
   'assignment-done': '📘',
@@ -22,9 +19,6 @@ export function AchievementsCard({achievements, onSeen}) {
   const seenSent = useRef(false);
   const hasNew = Boolean(achievements && achievements.some(a => a.isNew));
 
-  // Подсветка новых гасится на сервере сразу после показа — иначе она осталась
-  // бы навсегда. Один раз за монтирование: дашборд перезапрашивается после
-  // каждого решения, и без защёлки запрос уходил бы на каждый рендер.
   useEffect(() => {
     if (!hasNew || seenSent.current) return;
     seenSent.current = true;

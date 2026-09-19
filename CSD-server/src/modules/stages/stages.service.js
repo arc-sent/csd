@@ -1,10 +1,6 @@
 const prisma = require('../../shared/prisma');
 const { AppError } = require('../../shared/errors');
 
-// assignmentsTotal — сумма цен опубликованных заданий этапа: «полная»
-// стоимость, относительно которой админка и витрина считают скидку за покупку
-// этапа целиком. Считается на сервере, чтобы у админки и лендинга правило
-// «что входит в полную цену» было одно (только published, как и на витрине).
 const WITH_TOTALS = {
   _count: { select: { assignments: true } },
   assignments: { where: { status: 'published' }, select: { price: true } }
@@ -36,7 +32,7 @@ async function create(data) {
 }
 
 async function update(id, data) {
-  await getById(id); // 404, если такого этапа нет
+  await getById(id);
   return prisma.stage.update({ where: { id }, data });
 }
 
@@ -47,7 +43,7 @@ async function updateStatus(id, status) {
 
 async function remove(id) {
   await getById(id);
-  await prisma.stage.delete({ where: { id } }); // каскадно удалит задания и их задачи
+  await prisma.stage.delete({ where: { id } });
 }
 
 module.exports = { list, getById, create, update, updateStatus, remove };

@@ -3,8 +3,6 @@ const request = require('supertest');
 const { createApp } = require('../src/app');
 const prisma = require('../src/shared/prisma');
 
-// SMTP не настроен в тестовом окружении (см. tests/jest.setup.js) —
-// shared/mailer.js печатает код в консоль вместо отправки письма.
 function captureCode(logSpy) {
   const call = logSpy.mock.calls.find(args => String(args[0]).includes('[dev] Письмо для'));
   const match = call && String(call[0]).match(/Код для восстановления пароля: (\d{6})/);
@@ -98,8 +96,6 @@ describe('Password reset', () => {
   });
 
   it('resetToken меняет пароль — вход старым паролем перестаёт работать, новым начинает', async () => {
-    // Регистрируем отдельного пользователя для этого теста, чтобы не зависеть
-    // от порядка с предыдущим (там код уже погашен).
     const email = emails[3].replace('@', '-confirm@');
     await request(app).post('/api/account/register').send({ email, password: 'old-password-123' });
     const { code } = await requestResetAndCaptureCode(app, email);
@@ -129,9 +125,6 @@ describe('Password reset', () => {
     const first = await confirmReset(app, verify.body.resetToken, 'brand-new-password-123');
     expect(first.status).toBe(200);
 
-    // JWT сам по себе не одноразовый (в отличие от кода) — но пароль уже
-    // сменён, второе использование того же токена просто ставит тот же
-    // пароль ещё раз, аккаунт не оказывается в непредсказуемом состоянии.
     const second = await confirmReset(app, verify.body.resetToken, 'another-password-123');
     expect(second.status).toBe(200);
 
@@ -148,7 +141,6 @@ describe('Password reset', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ sent: true });
-    // Новое письмо не печаталось — кулдаун реально не даёт отправить повторно.
     expect(sentAgain).toBeNull();
   });
 

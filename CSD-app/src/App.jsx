@@ -40,26 +40,18 @@ function Shell() {
   const notify = useToast();
   const {status} = useAuthContext();
   const [route, navigate] = useRoute();
-  const [authMode, setAuthMode] = useState(null); // null | 'login' | 'register'
+  const [authMode, setAuthMode] = useState(null);
 
   const isCabinet = route.view === 'cabinet';
 
-  // Кабинет — личные экраны: свой <title> и noindex. Лендинг оставляет
-  // базовые title/description из index.html.
   useDocumentMeta(isCabinet ? {title: 'Личный кабинет', noindex: true} : {});
 
-  // Колонка на всю высоту экрана + растягивающийся main: иначе на коротких
-  // экранах (список задач, экран решения, пустой кабинет, проверка входа)
-  // подвал вставал сразу под контентом — посреди страницы. dvh, а не vh:
-  // на мобильных vh не учитывает адресную строку и низ подрезается.
   return (
     <div className="flex min-h-dvh flex-col">
       <Header isCabinet={isCabinet} navigate={navigate} onOpenAuth={() => setAuthMode('login')} />
       <main className="flex-1">
         {isCabinet ? (
           <>
-            {/* 'checking' — токен ещё проверяется; без этой ветки залогиненный
-                увидел бы вспышку экрана входа при каждой перезагрузке. */}
             {status === 'checking' && (
               <section className={`bg-bg ${sectionPad}`}>
                 <div className={container}>
@@ -78,8 +70,6 @@ function Shell() {
             <HowItWorks />
             <Demo notify={notify} />
             <Benefits />
-            {/* Plans сам открывает окно входа, когда покупку начинает
-                неавторизованный: так не теряется задание, на которое кликнули. */}
             <Plans notify={notify} />
             <Reviews />
             <FinalCta />

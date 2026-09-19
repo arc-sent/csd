@@ -17,14 +17,6 @@ const { errorHandler } = require('./middlewares/error-handler');
 function createApp() {
   const app = express();
 
-  // В деве статический сервер админки может подниматься на разных портах
-  // (см. .claude/launch.json) — разрешаем любой localhost, чтобы не гнаться
-  // за портом руками; в проде ALLOWED_ORIGIN должен быть указан явно.
-  //
-  // Сайту и админке всегда нужны РАЗНЫЕ origin'ы (разные порты/поддомены), а
-  // при этом оба должны попадать в CORS одновременно — поэтому ALLOWED_ORIGIN
-  // может перечислять несколько адресов через запятую
-  // ("http://ip:5188,http://ip:5189"), а не только один.
   const allowedOrigins = (process.env.ALLOWED_ORIGIN || '')
     .split(',')
     .map(value => value.trim())

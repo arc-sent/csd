@@ -1,11 +1,6 @@
 import { PIECE_ART } from '../../lib/pieceArt.js';
 import { isWhite } from '../../lib/board.js';
 
-// Порт рендера 8x8-сетки, общего для редактора позиции/конструктора решения/
-// предпросмотра (admins/js/position-editor.js renderBoard, admins/js/
-// solution-builder.js renderBuildBoard/renderPreviewBoard). Только разметка +
-// колбэки — вся логика (что именно происходит по клику/drop) остаётся в
-// компоненте-родителе, как и в оригинале (Board ничего не знает про draft).
 export default function Board({
   position,
   orientation = 'white',

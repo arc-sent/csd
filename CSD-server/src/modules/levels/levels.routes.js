@@ -6,7 +6,6 @@ const controller = require('./levels.controller');
 
 const router = Router();
 
-// Вся админка закрыта авторизацией — уровни правит только вошедший админ.
 router.use(authGuard);
 
 router.get('/', controller.listHandler);

@@ -1,11 +1,8 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 
-const SPEED = 28; // px/сек — заметно медленнее декоративной ленты (см. Marquee.jsx)
-const GAP = 14; // px — совпадает с gap-3.5 между карточками
+const SPEED = 28;
+const GAP = 14;
 
-// Реальные Assignment из БД не хранят "фигуру для иконки" (это чисто
-// декоративная деталь витрины) — берём по кругу из фиксированного набора,
-// по порядковому номеру карточки, чтобы визуально не повторялись подряд.
 const PIECE_ROTATION = ['wN', 'bQ', 'wB', 'bR', 'bK', 'wR', 'bN', 'wK', 'bB', 'wP', 'wQ', 'bP'];
 
 function AssignmentCard({assignment, index, onBuy}) {
@@ -34,8 +31,6 @@ function AssignmentCard({assignment, index, onBuy}) {
       <button
         type="button"
         onClick={event => {
-          // stopPropagation — иначе клик всплывёт до handleTrackClick на
-          // всём треке и вместо оплаты откроется информационный тост.
           event.stopPropagation();
           onBuy(assignment);
         }}
@@ -47,19 +42,6 @@ function AssignmentCard({assignment, index, onBuy}) {
   );
 }
 
-/**
- * Карусель заданий: тот же приём клонирования групп, что и в Marquee —
- * группа карточек копируется, пока не перекроет вьюпорт с запасом. В
- * отличие от Marquee лента крутится не CSS-анимацией, а вручную через
- * scrollLeft — так её можно останавливать перетаскиванием и стрелками без
- * рывков и продолжать движение сразу после отпускания.
- *
- * scrollLeft в некоторых окружениях округляется до целого пикселя, а
- * прирост за кадр меньше 1px — если брать текущий scrollLeft как базу для
- * следующего кадра, дробная часть каждый раз терялась бы округлением, и
- * лента вообще не двигалась бы. Поэтому истинную позицию храним отдельно,
- * в scrollPosRef, и в DOM только записываем её.
- */
 export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
   const viewportRef = useRef(null);
   const groupRef = useRef(null);
@@ -88,9 +70,6 @@ export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
     }
   };
 
-  // Измеряем ширину группы и считаем, сколько копий нужно, чтобы с запасом
-  // заполнить вьюпорт — минимум 3: одна "позади" как буфер для прокрутки
-  // назад, остальные заполняют видимую область плюс запас впереди.
   useEffect(() => {
     const viewport = viewportRef.current;
     const group = groupRef.current;
@@ -120,9 +99,6 @@ export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
     return () => observer.disconnect();
   }, []);
 
-  // При смене этапа состав карточек меняется — если число заданий в этапе
-  // совпадает, ширина группы не меняется и ResizeObserver промолчит, а
-  // прокрутку всё равно нужно вернуть в начало новой ленты.
   const isFirstStageRef = useRef(true);
   useEffect(() => {
     if (isFirstStageRef.current) {
@@ -136,7 +112,6 @@ export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
     viewport.scrollLeft = groupWidth;
   }, [stageId]);
 
-  // Автопрокрутка.
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
@@ -166,9 +141,6 @@ export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
     []
   );
 
-  // Клик по карточке ставит автопрокрутку на паузу на 8 секунд, чтобы
-  // успеть прочитать уведомление — тот же приём, что и в notify() (App.jsx):
-  // один таймер, сбрасываемый заново при каждом новом клике.
   const pauseForNotification = () => {
     if (reduceMotion) return;
     pausedRef.current = true;
@@ -178,10 +150,6 @@ export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
     }, 8000);
   };
 
-  // Стрелки и перетаскивание, наоборот, не должны надолго тормозить ленту —
-  // сдвинули руками и лента сразу же продолжает ехать сама. На время
-  // самого действия автоход ставим на паузу, чтобы он не боролся с рукой
-  // или со встроенной smooth-анимацией стрелки, а сразу после — снимаем.
   const scrollByCards = direction => {
     const viewport = viewportRef.current;
     const card = viewport?.querySelector('[data-assignment-id]');
@@ -197,9 +165,6 @@ export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
     }, 400);
   };
 
-  // Перетаскивание мышью — по образцу drag-логики доски в useTrainer
-  // (порог в 5px до признания жестом перетаскивания). На тач-устройствах
-  // перетаскивать не нужно — там уже работает нативный скролл свайпом.
   useEffect(() => {
     const handleMove = event => {
       const drag = dragRef.current;
@@ -209,7 +174,7 @@ export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
         if (Math.abs(dx) < 5) return;
         drag.moved = true;
         viewportRef.current?.classList.add('dragging');
-        pausedRef.current = true; // на время самого драга, чтобы автоход не боролся с рукой
+        pausedRef.current = true;
       }
       scrollPosRef.current = drag.startPos - dx;
       wrapScroll();
@@ -220,7 +185,7 @@ export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
       if (!drag) return;
       if (drag.moved) {
         suppressClickRef.current = true;
-        if (!reduceMotion) pausedRef.current = false; // отпустили — лента сразу едет дальше
+        if (!reduceMotion) pausedRef.current = false;
       }
       dragRef.current = null;
       viewportRef.current?.classList.remove('dragging');
@@ -238,9 +203,6 @@ export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
     dragRef.current = {startX: event.clientX, startPos: scrollPosRef.current, moved: false};
   };
 
-  // Клик по карточке — открыть уведомление; подавляется, если клик пришёл
-  // сразу после перетаскивания (иначе отпускание мыши после драга
-  // засчиталось бы как клик по карточке).
   const handleTrackClick = event => {
     if (suppressClickRef.current) {
       suppressClickRef.current = false;
@@ -249,8 +211,6 @@ export function AssignmentCarousel({notify, assignments, stageId, onBuy}) {
     const card = event.target.closest('[data-assignment-id]');
     if (!card) return;
     pauseForNotification();
-    // id реального Assignment — строка (cuid), не число, в отличие от
-    // прежних вручную придуманных id.
     const assignment = assignments.find(a => String(a.id) === card.dataset.assignmentId);
     if (assignment) {
       notify?.(`«${assignment.name}» — ${assignment.tasksCount} задач за ${assignment.price.toLocaleString('ru-RU')} ₽.`);

@@ -1,16 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 
-/**
- * Кастомный выпадающий список вместо нативного <select>: браузер рисует
- * попап select() своим системным окном, которое нельзя оформить в стиле
- * сайта, поэтому список — обычный <ul role="listbox"> поверх страницы.
- * Этапов со временем станет больше (добавляются через админку), поэтому
- * переключатель принимает произвольный список, а не завязан на количество.
- */
 export function StageSwitcher({stages, value, onChange, pulse = false}) {
   const [open, setOpen] = useState(false);
-  // Пульсация — намёк «сюда можно нажать»; после первого открытия он уже
-  // не нужен и только раздражал бы.
   const [discovered, setDiscovered] = useState(false);
   const rootRef = useRef(null);
   const currentIndex = Math.max(0, stages.findIndex(stage => stage.id === value));

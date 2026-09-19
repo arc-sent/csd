@@ -20,10 +20,6 @@ model AdminUser {
   @@map("admin_users")
 }
 
-// Код подтверждения смены email админа — та же форма и жизненный цикл, что у
-// EmailVerification/PasswordReset (15 минут, upsert при повторной отправке,
-// счётчик попыток). newEmail хранится тут же (не в AdminUser) — пока код не
-// подтверждён, реальный email админа не должен меняться.
 model AdminEmailChange {
   id         String    @id @default(cuid())
   adminId    String    @unique
@@ -38,10 +34,6 @@ model AdminEmailChange {
   @@map("admin_email_changes")
 }
 
-// Восстановление пароля админа до входа — форма и жизненный цикл те же, что
-// у AdminEmailChange/PasswordReset (сайт), но публичный доступ (без
-// authGuard): до входа админ ещё не аутентифицирован, поэтому здесь адрес
-// известен только по email из формы, а не из токена.
 model AdminPasswordReset {
   id         String    @id @default(cuid())
   adminId    String    @unique
@@ -55,28 +47,12 @@ model AdminPasswordReset {
   @@map("admin_password_resets")
 }
 
-// Покупатель (личный кабинет) — намеренно отдельная модель от AdminUser, а не
-// поле role: «это админ?» становится запросом в другую таблицу, а не булевым
-// флагом, который легко забыть проверить.
-// passwordHash nullable — под будущий вход через Google/Яндекс/VK, где своего
-// пароля у аккаунта нет. Логин по такому аккаунту обязан возвращать ту же
-// ошибку, что и неверный пароль, иначе это оракул для перебора аккаунтов.
-// email всегда в нижнем регистре: нормализуется в zod-схеме (account.validation.js)
-// до того, как его увидит сервис.
 model User {
   id           String          @id @default(cuid())
   email        String          @unique
   passwordHash String?
   name         String?
-  // Часовой пояс IANA ("Europe/Moscow"). Нужен для серии решений: день
-  // считается по местному времени пользователя, иначе решивший в 01:00 по
-  // Москве попадает во вчерашний UTC-день и теряет серию. Пусто = UTC.
   timeZone     String?
-  // Нулабельный таймстемп-как-статус — тот же приём, что и у
-  // UserAchievement.seenAt: null значит «не подтверждено», а не отдельный
-  // булевый флаг, и заодно хранит момент подтверждения без лишней колонки.
-  // Мягкий режим (см. account/entitlements.service.js — сюда ничего не
-  // добавлено): ни на что не влияет, кроме бейджа в кабинете.
   emailVerifiedAt DateTime?
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
@@ -90,34 +66,19 @@ model User {
   @@map("users")
 }
 
-// Код подтверждения email — отдельная таблица от User, а не поля на нём: у
-// кода принципиально другой жизненный цикл (живёт 15 минут, пересоздаётся
-// целиком при повторной отправке, нужен счётчик попыток). userId уникален —
-// это строгий 1:1, активный код только один, resend перезаписывает строку
-// upsert'ом, история не нужна. codeHash — bcrypt, тот же приём, что и
-// User.passwordHash: строка физически читаема кому угодно с доступом к БД,
-// хранить действующий секрет открытым текстом незачем.
 model EmailVerification {
   id         String   @id @default(cuid())
   userId     String   @unique
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   codeHash   String
   expiresAt  DateTime
-  // Счётчик неверных попыток — после 5 код нужно перезапрашивать (защита от
-  // перебора шестизначного кода).
   attempts   Int      @default(0)
-  // Для лимита «не чаще раза в 60 секунд» на POST /resend.
   lastSentAt DateTime @default(now())
   createdAt  DateTime @default(now())
 
   @@map("email_verifications")
 }
 
-// Код восстановления пароля — та же форма, что EmailVerification (тот же
-// жизненный цикл: 15 минут, upsert при повторной отправке, счётчик попыток),
-// отдельная таблица, а не переиспользование EmailVerification, потому что это
-// разные секреты с разными последствиями компрометации и не должны делить
-// строку/жизненный цикл.
 model PasswordReset {
   id         String   @id @default(cuid())
   userId     String   @unique
@@ -131,25 +92,12 @@ model PasswordReset {
   @@map("password_resets")
 }
 
-// Ручная выдача доступа к заданию из админки — второй источник права доступа
-// наряду с оплатой (см. account/entitlements.service.js). Отдельная таблица, а
-// не фиктивный платёж: журнал платежей должен остаться чисто финансовым, а у
-// выдачи свои поля — кто выдал и зачем.
-//
-// Уникального индекса (userId, assignmentId) намеренно нет: строки не
-// удаляются, отзыв — это revokedAt, и история выдач сохраняется. «Есть доступ»
-// = существует строка с revokedAt: null.
-//
-// Каскад по обеим ссылкам (в отличие от Payment, который живёт через SetNull):
-// платёж — финансовый документ и должен пережить удаление задания, а выдача
-// без задания или аккаунта — мусор.
 model Grant {
   id           String     @id @default(cuid())
   userId       String
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   assignmentId String
   assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  // Кто выдал. SetNull — удаление админа не должно стирать историю выдач.
   grantedById  String?
   grantedBy    AdminUser? @relation(fields: [grantedById], references: [id], onDelete: SetNull)
   note         String?
@@ -161,11 +109,6 @@ model Grant {
   @@map("grants")
 }
 
-// Разблокированное достижение. Хранится, а не вычисляется на лету, ради двух
-// вещей: даты получения (её из истории решений уже не восстановить, если
-// правила достижений поменяются) и однократного показа «новое достижение»
-// (seenAt). Уникальность (userId, key) делает выдачу идемпотентной — правила
-// пересчитываются при каждом решении и на дашборде.
 model UserAchievement {
   id         String    @id @default(cuid())
   userId     String
@@ -179,11 +122,6 @@ model UserAchievement {
   @@map("user_achievements")
 }
 
-// Прогресс решения задачи. Уникальный (userId, levelId) делает запись
-// upsert'ом — эндпоинт идемпотентен при повторных отправках. Каскад с обеих
-// сторон: прогресс — производные данные, без задачи или пользователя он мусор.
-// usedSolution (смотрел ли решение до победы) нельзя восстановить задним
-// числом, поэтому пишется сразу.
 model LevelProgress {
   id           String    @id @default(cuid())
   userId       String
@@ -193,8 +131,6 @@ model LevelProgress {
   solved       Boolean   @default(false)
   solvedAt     DateTime?
   usedSolution Boolean   @default(false)
-  // Счётчик неверных ходов по задаче: копится и после решения (задачу можно
-  // перерешивать). Из него считается честная точность в кабинете.
   mistakes     Int       @default(0)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -204,17 +140,10 @@ model LevelProgress {
   @@map("level_progress")
 }
 
-// Иерархия курса: Этап -> Задание -> Задача (Level). У задачи родитель
-// необязателен (assignmentId nullable) — в базе уже могут быть независимые
-// задачи, созданные до появления этой иерархии, их нельзя сломать миграцией.
 model Stage {
   id          String       @id @default(cuid())
   name        String
   description String       @default("")
-  // Цена этапа целиком в рублях. 0 — покупка этапом выключена (кнопка на
-  // витрине не показывается), задания при этом всё равно продаются поштучно.
-  // Не выводится из суммы цен заданий: админ сам решает, какую скидку дать
-  // за пакет — так же, как Assignment.price не выводится из цены задач.
   price       Float        @default(0)
   status      String       @default("draft") // draft | published | archived
   createdAt   DateTime     @default(now())
@@ -231,7 +160,7 @@ model Assignment {
   stage       Stage     @relation(fields: [stageId], references: [id], onDelete: Cascade)
   name        String
   description String    @default("")
-  price       Float     @default(0) // цена задания в рублях; см. Payment — оплата привязана сюда
+  price       Float     @default(0)
   status      String    @default("draft") // draft | published | archived
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -243,22 +172,9 @@ model Assignment {
   @@map("assignments")
 }
 
-// Запись о платеже за задание через ЮKassa. yookassaId — id платежа на их
-// стороне: по нему вебхук находит запись и обновляет статус. Отвязан и от
-// Assignment, и от User через SetNull (не Cascade) — платёж финансовый
-// документ и не должен пропадать, если задание или аккаунт потом удалили.
-// Доступ к заданию выводится отсюда: succeeded-платёж с userId и есть право
-// доступа (см. account/entitlements.service.js). Второй источник права —
-// ручная выдача из админки (модель Grant).
-// email — адрес чека на момент продажи (54-ФЗ), он не меняется, даже если
-// пользователь потом сменит почту в аккаунте.
 model Payment {
   id           String      @id @default(cuid())
   yookassaId   String      @unique
-  // Ровно одно из двух: платёж либо за одно задание, либо за этап целиком
-  // (см. payments.service.js createPayment) — оба nullable и SetNull по той
-  // же причине, что и раньше: финансовый документ переживает удаление того,
-  // что купили.
   assignmentId String?
   assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
   stageId      String?
@@ -278,9 +194,6 @@ model Payment {
   @@map("payments")
 }
 
-// Формат полей (position/castling/steps) совпадает с тем, что уже
-// использует тренажёр на публичном сайте (script.js: LEVEL.position/steps),
-// чтобы уровни без изменений подходили и туда, и в админку.
 model Level {
   id             String      @id @default(cuid())
   name           String
@@ -290,11 +203,11 @@ model Level {
   position       Json
   turn           String      @default("w") // w | b
   castling       Json
-  enPassant      String? // клетка взятия на проходе (например "e6") или null
+  enPassant      String?
   halfmoveClock  Int         @default(0)
   fullmoveNumber Int         @default(1)
   steps          Json
-  result         String? // 1-0 | 0-1 | 1/2-1/2 | ± | ∓ | = | null (без результата) — заполняет админ в ReviewView
+  result         String?
   status         String          @default("draft") // draft | published | archived
   assignmentId   String?
   assignment     Assignment?     @relation(fields: [assignmentId], references: [id], onDelete: Cascade)

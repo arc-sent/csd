@@ -59,15 +59,7 @@ const STEPS = [
 ];
 
 function StepVisual({index}) {
-  // display специально не входит в общий box: у шага 02 нужен flex, у
-  // остальных — grid, а голые grid+flex на одном элементе конфликтуют за
-  // display на одном слое каскада Tailwind (кто окажется в сборке позже,
-  // тот и победит) — из-за этого столбики схлопывались в одну колонку.
   const box =
-    // place-content-center — это именно place-content (align+justify), а не
-    // только content-center (align-content без justify-content). Из-за
-    // недостающего justify-content трек 03 (доска 2×2 с фикс. шириной)
-    // прижимался к левому краю вместо центра.
     'h-[120px] mt-6 mb-[22px] rounded-[18px] border border-line bg-paper place-items-center place-content-center overflow-hidden';
   if (index === '01') {
     return (
@@ -206,9 +198,6 @@ export function Benefits() {
   );
 }
 
-// Скидка за этап целиком относительно суммы цен его заданий, в целых
-// процентах; 0 — скидки нет. Правило то же, что в админке
-// (CSD-app-admin lib/format.js stageDiscountPercent) — держать синхронно.
 function stageDiscountPercent(stage) {
   const total = stage.assignments.reduce((sum, a) => sum + a.price, 0);
   if (!(stage.price > 0) || !(total > 0) || stage.price >= total) return 0;
@@ -216,23 +205,15 @@ function stageDiscountPercent(stage) {
 }
 
 export function Plans({notify}) {
-  // Этапы/задания больше не зашиты в код — тянутся из реальной админки
-  // (CSD-server/prisma: Stage -> Assignment -> Level) через публичную витрину
-  // GET /api/public/stages (только опубликованные, без токена).
   const [stages, setStages] = useState([]);
   const [stageId, setStageId] = useState(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [paymentAssignment, setPaymentAssignment] = useState(null);
   const [paymentStage, setPaymentStage] = useState(null);
-  // Покупка (задание или этап), ради которой попросили войти: после
-  // успешного входа она продолжается сама, клик не теряется. {kind, item}.
   const [pendingPurchase, setPendingPurchase] = useState(null);
   const {status} = useAuthContext();
 
   function startPurchase(kind, item) {
-    // 'unverified' — тоже пускаем в модалку оплаты, а не в «войдите»: аккаунт
-    // уже есть, просто сервер откажет понятной ошибкой «Подтвердите почту»
-    // (PaymentModal её и так показывает как есть, см. её catch).
     if (status === 'authenticated' || status === 'unverified') {
       if (kind === 'stage') setPaymentStage(item);
       else setPaymentAssignment(item);
@@ -265,8 +246,6 @@ export function Plans({notify}) {
   return (
     <section className={`bg-bg ${sectionPad}`} id="plans">
       <div className={container}>
-        {/* relative z-30 — чтобы выпадающий список этапов не уходил под карусель
-            ниже (у Reveal свой слой из-за transform/opacity). */}
         <Reveal className="relative z-30">
           <SectionIntro
             split
@@ -274,9 +253,7 @@ export function Plans({notify}) {
               stages.length > 0 && (
                 <div className="mb-3">
                 <div className="flex flex-col items-stretch gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
-                  {/* pulse — только когда этапов больше одного: с одним переключать нечего. */}
                   <StageSwitcher stages={stages} value={stageId} onChange={setStageId} pulse={stages.length > 1} />
-                  {/* price: 0 — покупка этапом выключена в админке, кнопку не показываем. */}
                   {stage && stage.price > 0 && (
                     <button
                       type="button"

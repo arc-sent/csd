@@ -7,7 +7,6 @@ const U1_EMAIL = 'test-cabinet-u1@chesslab.local';
 const U2_EMAIL = 'test-cabinet-u2@chesslab.local';
 const PASSWORD = 'super-secret-123';
 
-// Валидная позиция: белый ферзь d4, белый король g1, чёрный король g8.
 const validPosition = () => {
   const board = Array.from({ length: 8 }, () => Array(8).fill(''));
   board[0][6] = '♚';
@@ -45,7 +44,6 @@ describe('Account: личный кабинет', () => {
       data: { stageId, name: 'Задание B', price: 1000, status: 'published' }
     })).id;
 
-    // Три опубликованные задачи с разным createdAt — порядок должен идти по нему.
     for (let i = 1; i <= 3; i++) {
       const level = await prisma.level.create({
         data: {
@@ -60,7 +58,6 @@ describe('Account: личный кабинет', () => {
       });
       levelIds.push(level.id);
     }
-    // Черновик — в кабинете его быть не должно.
     await prisma.level.create({
       data: {
         name: 'Черновик',
@@ -71,7 +68,6 @@ describe('Account: личный кабинет', () => {
         steps: validSteps
       }
     });
-    // Ход чёрных — тренажёр такое не отыгрывает.
     unsupportedLevelId = (await prisma.level.create({
       data: {
         name: 'За чёрных',
@@ -84,8 +80,6 @@ describe('Account: личный кабинет', () => {
         createdAt: new Date(Date.UTC(2026, 0, 4))
       }
     })).id;
-    // Реальный случай из базы: turn остался дефолтным 'w', а решение
-    // начинается ходом ЧЁРНОЙ фигуры — тренажёр такую задачу не отыграет.
     blackSolutionLevelId = (await prisma.level.create({
       data: {
         name: 'Решение за чёрных',
@@ -93,7 +87,7 @@ describe('Account: личный кабинет', () => {
         status: 'published',
         position: (() => {
           const board = validPosition();
-          board[3][3] = '♞'; // чёрный конь, которым ходит ученик
+          board[3][3] = '♞';
           return board;
         })(),
         turn: 'w',
@@ -102,8 +96,6 @@ describe('Account: личный кабинет', () => {
         createdAt: new Date(Date.UTC(2026, 0, 6))
       }
     })).id;
-    // Корректная задача за чёрных: ходит чёрный ферзь, turn='b'. Такие задачи
-    // тренажёр отыгрывает — это и проверяем.
     blackPlayableLevelId = (await prisma.level.create({
       data: {
         name: 'За чёрных: ферзь',
@@ -111,18 +103,17 @@ describe('Account: личный кабинет', () => {
         status: 'published',
         position: (() => {
           const board = Array.from({ length: 8 }, () => Array(8).fill(''));
-          board[0][6] = '♚'; // чёрный король g8
-          board[3][3] = '♛'; // чёрный ферзь d5 — им и ходит ученик
-          board[7][6] = '♔'; // белый король g1
+          board[0][6] = '♚';
+          board[3][3] = '♛';
+          board[7][6] = '♔';
           return board;
         })(),
         turn: 'b',
         castling,
-        steps: [{ player: { from: [3, 3], to: [7, 3] }, reply: null }], // Фd5-d1+
+        steps: [{ player: { from: [3, 3], to: [7, 3] }, reply: null }],
         createdAt: new Date(Date.UTC(2026, 0, 7))
       }
     })).id;
-    // Битая позиция — на такой useTrainer падает при монтировании.
     brokenLevelId = (await prisma.level.create({
       data: {
         name: 'Битая позиция',
@@ -151,11 +142,8 @@ describe('Account: личный кабинет', () => {
     const r2 = await request(app).post('/api/account/register').send({ email: U2_EMAIL, password: PASSWORD });
     u1 = { id: r1.body.user.id, token: r1.body.token };
     u2 = { id: r2.body.user.id, token: r2.body.token };
-    // Кабинет теперь требует подтверждённую почту — эти тесты не про само
-    // подтверждение (см. email-verification.test.js).
     await prisma.user.updateMany({ where: { id: { in: [u1.id, u2.id] } }, data: { emailVerifiedAt: new Date() } });
 
-    // U1 купил A (успешно), U2 купил B; плюс у U1 неоплаченный платёж на B.
     await prisma.payment.create({
       data: { yookassaId: 'cab-a-u1', assignmentId: assignmentA, userId: u1.id, email: U1_EMAIL, amount: 1000, status: 'succeeded' }
     });
@@ -189,7 +177,7 @@ describe('Account: личный кабинет', () => {
       expect(res.body.assignments[0]).toMatchObject({
         id: assignmentA,
         name: 'Задание A',
-        levelsCount: 7, // 3 обычные + 3 особые (за чёрных ×2, решение за чёрных) + «битая»; черновик не в счёт
+        levelsCount: 7,
         solvedCount: 0
       });
     });
@@ -202,7 +190,6 @@ describe('Account: личный кабинет', () => {
     });
 
     it('неоплаченный платёж доступа не даёт', async () => {
-      // У U1 есть pending-платёж на B — этого недостаточно.
       const res = await request(app).get(`/api/account/assignments/${assignmentB}/levels`).set(auth(u1));
       expect(res.status).toBe(403);
     });
@@ -225,16 +212,12 @@ describe('Account: личный кабинет', () => {
     it('помечает задачи, которые тренажёр не отыграет', async () => {
       const res = await request(app).get(`/api/account/assignments/${assignmentA}/levels`).set(auth(u1));
       const byId = Object.fromEntries(res.body.levels.map(l => [l.id, l]));
-      // turn='b', а первый ход решения делает белый ферзь.
       expect(byId[unsupportedLevelId].supported).toBe(false);
       expect(byId[unsupportedLevelId].unsupportedReason).toContain('Очередь хода');
       expect(byId[brokenLevelId].supported).toBe(false);
       expect(byId[levelIds[0]].supported).toBe(true);
     });
 
-    // Регрессия на реальные данные: turn='w', но ходит чёрная фигура. Раньше
-    // такие задачи попадали в общую корзину «за чёрных не поддерживается»;
-    // теперь чёрные поддержаны, и остаётся именно рассогласование очереди хода.
     it('ловит задачу, где решение начинается ходом чёрных, хотя turn=w', async () => {
       const res = await request(app).get(`/api/account/assignments/${assignmentA}/levels`).set(auth(u1));
       const level = res.body.levels.find(l => l.id === blackSolutionLevelId);
@@ -294,7 +277,6 @@ describe('Account: личный кабинет', () => {
       const rows = await prisma.levelProgress.findMany({ where: { userId: u1.id, levelId: levelIds[0] } });
       expect(rows).toHaveLength(1);
       expect(rows[0].solvedAt.getTime()).toBe(first.solvedAt.getTime());
-      // usedSolution «залипает»: подсмотрел один раз — это уже факт.
       expect(rows[0].usedSolution).toBe(true);
     });
 

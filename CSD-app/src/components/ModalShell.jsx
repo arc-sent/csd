@@ -1,7 +1,5 @@
 import {useState} from 'react';
 
-// Общая оболочка модалок (оплата, вход) — оверлей, панель, шапка с крестиком.
-// Стили те же, что были в PaymentModal, просто теперь в одном месте.
 export function ModalShell({eyebrow, title, ariaLabel, onClose, children, wide = false}) {
   return (
     <div
@@ -35,7 +33,6 @@ export function ModalShell({eyebrow, title, ariaLabel, onClose, children, wide =
   );
 }
 
-// Общие классы полей формы — используются и в оплате, и во входе.
 export const fieldLabelClass =
   'block text-[10px] uppercase tracking-[.08em] font-extrabold text-faint mb-2';
 export const inputClass =
@@ -43,8 +40,6 @@ export const inputClass =
 export const submitClass =
   'inline-flex w-full items-center justify-center min-h-[52px] px-[22px] rounded-[15px] text-sm font-extrabold bg-accent text-on-accent shadow-[0_12px_24px_rgba(255,107,45,.22)] transition duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:pointer-events-none disabled:translate-y-0';
 
-// Поле пароля с кнопкой-глазом — общее для входа/регистрации и смены
-// пароля, чтобы не дублировать переключение видимости в каждом месте.
 export function PasswordInput({id, className = '', ...props}) {
   const [visible, setVisible] = useState(false);
   return (

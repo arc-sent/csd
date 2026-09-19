@@ -77,9 +77,6 @@ describe('Payments admin', () => {
   });
 
   afterAll(async () => {
-    // Голые переменные: если beforeAll упал раньше присваивания, значение
-    // остаётся undefined, а deleteMany({where:{id: undefined}}) Prisma
-    // понимает как «без фильтра» — удаляет всю таблицу целиком.
     if (assignmentId) await prisma.payment.deleteMany({ where: { assignmentId } });
     await prisma.user.deleteMany({ where: { email: { in: [BUYER_EMAIL, OTHER_EMAIL] } } });
     if (assignmentId) await prisma.assignment.deleteMany({ where: { id: assignmentId } });
@@ -106,7 +103,6 @@ describe('Payments admin', () => {
     const payment = res.body.find(p => p.yookassaId === 'admin-list-succeeded');
     expect(payment.assignment.name).toBe('Задание для журнала');
     expect(payment.user.email).toBe(BUYER_EMAIL);
-    // passwordHash аккаунта не должен просочиться даже вложенно.
     expect(payment.user.passwordHash).toBeUndefined();
   });
 
@@ -157,9 +153,6 @@ describe('Payments admin', () => {
       json: async () => ({ id: String(url).split('/').pop(), status: 'succeeded' })
     }));
 
-    // Синхронизатор ходит по всем незавершённым платежам базы, а тесты гоняют
-    // по той же базе, что и разработка. Запоминаем чужие pending-платежи и
-    // возвращаем их статус, чтобы прогон тестов не «оплачивал» чужие записи.
     const before = await prisma.payment.findMany({
       where: { status: 'pending' },
       select: { id: true }

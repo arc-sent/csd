@@ -4,9 +4,6 @@ import { handleApiError } from '../lib/authError.js';
 import { PAYMENT_STATUS_LABEL, PAYMENT_STATUS_PILL, formatAmount, formatDate } from '../lib/format.js';
 import EntityListView from './EntityListView.jsx';
 
-// Журнал платежей. Статусы сервер подтягивает сам (payments.sync.js), но
-// фильтрация делается запросом, а не на клиенте: платежей со временем станет
-// заметно больше, чем этапов, и весь список тянуть незачем.
 export default function PaymentsView({ notify }) {
   const [payments, setPayments] = useState([]);
   const [search, setSearch] = useState('');
@@ -27,7 +24,6 @@ export default function PaymentsView({ notify }) {
     storage.loadAssignments().then(setAssignments).catch(() => {});
   }, []);
 
-  // Ввод в поиске не должен слать запрос на каждую букву.
   useEffect(() => {
     const params = { q: search.trim(), status: statusFilter, assignmentId: assignmentFilter };
     const id = setTimeout(() => reload(params), search ? 300 : 0);
@@ -38,8 +34,6 @@ export default function PaymentsView({ notify }) {
     setRefreshing(payment.id);
     try {
       const updated = await storage.refreshPayment(payment.id);
-      // Если новый статус выпал из активного фильтра, карточке в списке не
-      // место — иначе в подборке «Ожидает оплаты» висел бы оплаченный платёж.
       setPayments(list =>
         statusFilter && updated.status !== statusFilter
           ? list.filter(p => p.id !== updated.id)
@@ -90,8 +84,6 @@ export default function PaymentsView({ notify }) {
                   {PAYMENT_STATUS_LABEL[payment.status] || payment.status}
                 </span>
               </div>
-              {/* assignment и user отвязываются через SetNull — у старого
-                  платежа их может уже не быть, но сам платёж остаётся. */}
               <p className="level-card-desc">
                 {payment.assignment ? payment.assignment.name : 'Задание удалено'}
               </p>

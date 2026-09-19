@@ -55,8 +55,6 @@ describe('Auth module', () => {
     expect(typeof res.body.token).toBe('string');
     expect(res.body.admin.email).toBe(TEST_EMAIL);
     expect(res.body.admin.passwordHash).toBeUndefined();
-    // claim type — то, чем authGuard отличает админский токен от
-    // пользовательского (секрет у них общий).
     expect(require('jsonwebtoken').decode(res.body.token).type).toBe('admin');
   });
 

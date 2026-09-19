@@ -1,7 +1,3 @@
-// Генерирует public/og.png (1200×630, превью для соцсетей/мессенджеров) и
-// public/apple-touch-icon.png из SVG. Запуск: npm run generate:og. Результат
-// коммитится — при сборке в Docker скрипт не запускается, картинка уже лежит
-// в public/ и просто копируется в dist/.
 import sharp from 'sharp';
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
@@ -35,8 +31,6 @@ await sharp(Buffer.from(ogSvg))
   .png()
   .toFile(out('og.png'));
 
-// Иконка для iOS/закладок: конь на тёмной плашке с тем же скруглением, что у
-// логотипа в шапке (.brand-mark).
 const iconSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
   <rect width="180" height="180" rx="40" fill="#1b1c19"/>

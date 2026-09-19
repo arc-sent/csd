@@ -15,11 +15,6 @@ const CODE_TTL_MS = 15 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
-// Один и тот же текст на неверный/просроченный/отсутствующий код и на
-// исчерпанные попытки — по той же логике, что и account.service.login():
-// разные тексты ничего не дают пользователю, который всё равно может только
-// запросить код заново, а вот подсказку атакующему («код именно просрочен»,
-// «именно неверный») дают.
 const BAD_CODE_MESSAGE = 'Неверный или истёкший код';
 
 function generateCode() {
@@ -35,16 +30,10 @@ function emailBody(code) {
   );
 }
 
-// text — запасной вариант для почтовых клиентов без HTML; html — то, что
-// реально увидит подавляющее большинство получателей.
 function emailHtml(code) {
   return CODE_EMAIL_TEMPLATE.replace(/{{CODE}}/g, code);
 }
 
-// Генерирует код, хеширует, upsert'ит строку (одна активная запись на
-// пользователя — resend полностью её перезаписывает, история не нужна) и
-// отправляет письмо. Вызывается и при регистрации, и при resend — оба места
-// хотят одно и то же: новый код взамен старого.
 async function createAndSendCode(userId, email) {
   const code = generateCode();
   const codeHash = await bcrypt.hash(code, 10);
@@ -68,8 +57,6 @@ async function createAndSendCode(userId, email) {
 async function verifyCode(userId, code) {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { emailVerifiedAt: true } });
   if (!user) throw new AppError(404, 'Пользователь не найден');
-  // Идемпотентно: повторный вызов после успеха не должен быть ошибкой —
-  // фронту не нужно отдельно помнить, что уже подтверждено.
   if (user.emailVerifiedAt) return;
 
   const verification = await prisma.emailVerification.findUnique({ where: { userId } });

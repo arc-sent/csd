@@ -4,18 +4,12 @@ import {Brand} from './Header.jsx';
 import {TermsModal} from './TermsModal.jsx';
 import {useState} from 'react';
 
-// bg-bg, не bg-paper: раньше между Reviews (paper) и этим блоком стоял
-// FAQ (bg-bg) — после его удаления две paper-секции подряд слипались
-// в одну, без обычного чередования фона между блоками лендинга.
 export function FinalCta() {
   return (
     <section className={`bg-bg ${sectionPad}`} id="purchase">
       <Reveal className={`${container} relative overflow-hidden rounded-[24px] sm:rounded-[32px] bg-dark text-[#fff] text-center px-5 py-[52px] sm:px-10 sm:py-[86px]`}>
         <span className="hidden sm:block absolute w-[280px] h-[280px] rounded-full border border-[#363935] top-1/2 -translate-y-1/2 -left-[170px]" />
         <span className="hidden sm:block absolute w-[280px] h-[280px] rounded-full border border-[#363935] top-1/2 -translate-y-1/2 -right-[170px]" />
-        {/* Конь остаётся видимым на любой ширине — в оригинале скрываются
-            только два кольца-бордюра (:before/:after), а фигура лишь меняет
-            размер/прозрачность по брейкпоинтам. */}
         <span
           className="absolute right-[-70px] bottom-[-70px] w-[220px] h-[220px] opacity-[.07] sm:right-[7%] sm:bottom-[-56px] sm:w-[300px] sm:h-[300px] sm:opacity-[.09] lg:right-[-30px] pointer-events-none bg-no-repeat bg-right-bottom bg-contain"
           style={{backgroundImage: `url(${import.meta.env.BASE_URL}pieces/wN.png)`}}
@@ -43,9 +37,6 @@ const FOOTER_COLUMNS = [
   ['Контакты', [['mailto:chessdinamika@yandex.ru', 'chessdinamika@yandex.ru'], ['#', 'Telegram'], ['#', 'VK']]]
 ];
 
-// Подвал рендерится и в кабинете (App.jsx держит его вне переключения
-// лендинг/кабинет), поэтому лого здесь та же кабинет-осведомлённая ссылка,
-// что и в шапке — иначе клик по нему в кабинете никуда не вёл бы.
 export function Footer({isCabinet = false}) {
   const [termsOpen, setTermsOpen] = useState(false);
   return (
@@ -67,7 +58,6 @@ export function Footer({isCabinet = false}) {
                 key={text}
                 className="text-[11px] text-on-dark/70 hover:text-on-dark"
                 href={href}
-                // #terms — не якорь страницы, а открытие модалки с соглашением.
                 onClick={
                   href === '#terms'
                     ? event => {

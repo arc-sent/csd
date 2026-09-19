@@ -1,11 +1,7 @@
 import {useCallback, useEffect, useState} from 'react';
 
-// Маршрут в query-параметрах, а не в пути: сборка идёт с base:'./' под обычный
-// статический хостинг, где /cabinet вернёт 404 при обновлении страницы, если
-// не настраивать SPA-fallback. Хеш занят якорями лендинга (#plans, #reviews).
 const ROUTE_EVENT = 'chesslab:route';
 
-// При пререндере (scripts/prerender.mjs) window нет — рендерится лендинг.
 const isBrowser = typeof window !== 'undefined';
 
 export function readRoute(search = isBrowser ? window.location.search : '') {
@@ -28,8 +24,6 @@ export function buildHref({view = 'landing', assignmentId = null, levelId = null
 
 export function navigate(next) {
   window.history.pushState({}, '', buildHref(next));
-  // pushState не порождает события сам — без этого подписчики не узнают о
-  // переходе (классическая ловушка ручного роутинга).
   window.dispatchEvent(new Event(ROUTE_EVENT));
 }
 

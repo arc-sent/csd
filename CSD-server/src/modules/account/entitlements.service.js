@@ -1,24 +1,6 @@
 const prisma = require('../../shared/prisma');
 const { AppError } = require('../../shared/errors');
 
-// ЕДИНСТВЕННОЕ место, где решается «есть ли у пользователя доступ к заданию».
-// Источников права три:
-//   1. Оплата задания — успешный платёж и есть доступ, отдельной записи о
-//      праве не заводится (двойная запись это как раз способ получить
-//      оплатившего клиента без доступа). Возврат средств меняет статус
-//      платежа, и доступ пропадает сам.
-//   2. Оплата этапа целиком (Payment.stageId) — тот же принцип, но даёт
-//      доступ сразу ко всем опубликованным заданиям этапа, включая те, что
-//      admin опубликует позже (проверка идёт по stageId задания, а не по
-//      списку id на момент покупки).
-//   3. Ручная выдача из админки (модель Grant) — «подарить» задание тренеру
-//      или ученику без оплаты. Активной считается выдача с revokedAt: null.
-//
-// Обе функции ниже — вся поверхность проверки прав: кабинет, дашборд,
-// достижения и запрет повторной покупки ходят только сюда.
-
-// Активные выдачи пользователя. Отдельно от платежей, потому что нужны и сами
-// по себе — в карточке аккаунта в админке.
 function activeGrants(where) {
   return prisma.grant.findMany({
     where: { ...where, revokedAt: null },
@@ -27,8 +9,6 @@ function activeGrants(where) {
   });
 }
 
-// stageId succeeded-платежей пользователя — переиспользуется и списком
-// (listOwnedAssignments), и точечной проверкой (ownsAssignment).
 function paidStageIds(userId) {
   return prisma.payment.findMany({
     where: { userId, status: 'succeeded', stageId: { not: null } },
@@ -41,8 +21,6 @@ async function listOwnedAssignments(userId) {
   const [payments, grants, stagePayments] = await Promise.all([
     prisma.payment.findMany({
       where: { userId, status: 'succeeded', assignmentId: { not: null } },
-      // distinct — повторная покупка того же задания не должна дублировать его
-      // в кабинете; сами строки платежей при этом сохраняются для бухгалтерии.
       distinct: ['assignmentId'],
       orderBy: { createdAt: 'desc' },
       select: { assignmentId: true, createdAt: true }
@@ -51,8 +29,6 @@ async function listOwnedAssignments(userId) {
     paidStageIds(userId)
   ]);
 
-  // Задания купленных этапов — все опубликованные задания этих stageId, а не
-  // список на момент покупки: этап мог пополниться новыми заданиями позже.
   const stageAssignments = stagePayments.length
     ? await prisma.assignment.findMany({
         where: { stageId: { in: stagePayments.map(p => p.stageId) }, status: 'published' },
@@ -61,9 +37,6 @@ async function listOwnedAssignments(userId) {
     : [];
   const stagePaidAt = new Map(stagePayments.map(p => [p.stageId, p.createdAt]));
 
-  // Приоритет источника: прямая оплата задания > оплата этапа > ручная
-  // выдача — отзыв выдачи не должен выглядеть так, будто он отбирает
-  // оплаченный (напрямую или через этап) доступ.
   const byAssignment = new Map();
   payments.forEach(p => {
     byAssignment.set(p.assignmentId, {

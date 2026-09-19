@@ -7,10 +7,6 @@ const { AppError } = require('../../shared/errors');
 const mailer = require('../../shared/mailer');
 const { signToken, verifyToken } = require('../../shared/jwt');
 
-// Токен смены пароля — короткоживущий JWT с тем же секретом, что и токены
-// админа/покупателя (claim type их отличает — см. shared/jwt.js), а не
-// отдельная запись в БД: он живёт считаные минуты и проверяется ровно один
-// раз, заводить под это ещё одну таблицу незачем.
 const RESET_TOKEN_TTL = '10m';
 const RESET_TOKEN_TYPE = 'password-reset';
 
@@ -23,10 +19,6 @@ const CODE_TTL_MS = 15 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
-// Один и тот же ответ на неверный/просроченный/отсутствующий код — та же
-// логика, что в email-verification.service.js: разные тексты дают
-// подсказку атакующему, а пользователю всё равно нечего делать, кроме как
-// запросить код заново.
 const BAD_CODE_MESSAGE = 'Неверный или истёкший код';
 
 function generateCode() {
@@ -66,19 +58,12 @@ async function createAndSendCode(userId, email) {
   });
 }
 
-// Публичный, неаутентифицированный эндпоинт — принимает email напрямую (в
-// отличие от email-verification, где запрос идёт от уже выданного JWT).
-// Поэтому ответ всегда одинаковый вне зависимости от того, существует ли
-// аккаунт и не истёк ли ещё cooldown с прошлой отправки — иначе это оракул
-// для перебора зарегистрированных email (тот же принцип, что и в
-// account.service.login()).
 async function requestReset(email) {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return { sent: true };
 
   const existing = await prisma.passwordReset.findUnique({ where: { userId: user.id } });
   if (existing && Date.now() - existing.lastSentAt.getTime() < RESEND_COOLDOWN_MS) {
-    // Реального письма не будет, но ответ не должен отличаться от «отправлено».
     return { sent: true };
   }
 
@@ -86,10 +71,6 @@ async function requestReset(email) {
   return { sent: true };
 }
 
-// Тоже по email, а не по userId — пользователь ещё не аутентифицирован (в
-// этом и смысл восстановления пароля). Код проверяется здесь один раз и сразу
-// гасится (строка удаляется) — дальше пользователь работает с resetToken, а
-// не может подобрать новый пароль к тому же коду повторно.
 async function verifyResetCode(email, code) {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new AppError(400, BAD_CODE_MESSAGE);
@@ -112,9 +93,6 @@ async function verifyResetCode(email, code) {
   return signToken({ sub: user.id, type: RESET_TOKEN_TYPE }, RESET_TOKEN_TTL);
 }
 
-// resetToken, а не email+code: код уже проверен и погашен в verifyResetCode,
-// повторно предъявить его нельзя, поэтому у смены пароля свой отдельный,
-// одноразовый по факту использования секрет.
 async function confirmReset(resetToken, newPassword) {
   let payload;
   try {

@@ -8,12 +8,6 @@ import {LEVEL} from '../data/level.js';
 const panelButton =
   'inline-flex items-center justify-center text-center min-h-[34px] px-2 rounded-[11px] text-[10px] font-extrabold';
 
-/**
- * Витрина интерфейса: та же доска и панель, но без обработчиков.
- * Поверхность берётся та же, что у настоящей панели тренажёра (bg-panel):
- * карточка её изображает, а на более светлом bg-surface её кнопки с лёгкой
- * заливкой теряли контраст — светлее почти белого уже некуда.
- */
 function TaskCard() {
   return (
     <div
@@ -87,7 +81,6 @@ function TaskCard() {
 export function Hero() {
   return (
     <section className="relative overflow-hidden pt-[55px] pb-[74px] sm:pt-[76px] sm:pb-[104px]">
-      {/* Фоновое пятно: строго под контентом, иначе перекрывает заголовок */}
       <span
         className="absolute z-0 rounded-full bg-accent-soft blur-[3px] pointer-events-none w-[300px] h-[300px] -right-[150px] -top-[130px] sm:w-[520px] sm:h-[520px] sm:-right-[220px] sm:-top-[180px]"
         aria-hidden="true"
@@ -131,7 +124,6 @@ export function Hero() {
           </div>
         </Reveal>
 
-        {/* На телефонах витрину прячем: интерфейс целиком доступен ниже */}
         <Reveal delay className="hidden sm:flex relative min-h-[480px] lg:min-h-[580px] items-center justify-center">
           <span className="absolute w-[520px] h-[520px] rounded-full border border-line hidden lg:block" />
           <span className="absolute w-[640px] h-[640px] rounded-full border border-dashed border-line hidden lg:block" />
@@ -139,7 +131,6 @@ export function Hero() {
         </Reveal>
       </div>
 
-      {/* Лента вне контейнера — она тянется на всю ширину экрана */}
       <Marquee />
     </section>
   );

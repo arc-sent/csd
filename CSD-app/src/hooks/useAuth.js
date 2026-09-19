@@ -2,22 +2,8 @@ import {useCallback, useEffect, useState} from 'react';
 import * as api from '../lib/api.js';
 import {setSessionExpiredHandler} from '../lib/authError.js';
 
-// Обязательное подтверждение почты (см. account.guard.js.requireVerifiedEmail
-// на сервере): статус после входа/регистрации зависит от emailVerified, а не
-// всегда 'authenticated'. 'unverified' — отдельное состояние, а не просто
-// флаг поверх 'authenticated': им управляет тот же App.jsx-роутинг, что и
-// 'unauthenticated'/'checking', и по нему решается, что показать в кабинете —
-// сам кабинет или экран ввода кода.
 const statusFor = user => (user.emailVerified ? 'authenticated' : 'unverified');
 
-/**
- * Состояние авторизации покупателя. Порт машины состояний из
- * CSD-app-admin/src/hooks/useAuth.js: 'checking' нужен, чтобы залогиненный
- * пользователь не видел вспышку экрана входа, пока проверяется токен.
- *
- * Вызывать напрямую нельзя — только через AuthProvider, иначе каждый
- * потребитель отправит свой запрос /me.
- */
 export function useAuth() {
   const [status, setStatus] = useState('checking');
   const [user, setUser] = useState(null);
@@ -49,8 +35,6 @@ export function useAuth() {
       });
   }, []);
 
-  // login/register пробрасывают ошибку дальше (как в админке), чтобы форма
-  // сняла спиннер и осталась открытой.
   const login = useCallback(async credentials => {
     setAuthError('');
     try {
@@ -91,9 +75,6 @@ export function useAuth() {
     return current;
   }, []);
 
-  // Возвращает результат как есть ({sent}|{retryAfterSeconds}|{alreadyVerified})
-  // — обратный отсчёт и текст ошибки рисует сам экран подтверждения, здесь
-  // только запрос.
   const resendVerification = useCallback(() => api.resendVerificationCode(), []);
 
   return {status, user, authError, login, register, logout, verifyEmail, resendVerification};

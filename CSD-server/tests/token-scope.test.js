@@ -9,9 +9,6 @@ const ADMIN_EMAIL = 'test-token-scope-admin@chesslab.local';
 const USER_EMAIL = 'test-token-scope-user@chesslab.local';
 const PASSWORD = 'super-secret-123';
 
-// Секрет у админских и пользовательских токенов общий, поэтому единственное,
-// что отделяет админку от кабинета, — claim `type` и его проверка в guard'ах.
-// Этот набор существует, чтобы отделение нельзя было случайно сломать.
 describe('Разделение админских и пользовательских токенов', () => {
   let app;
   let adminToken;
@@ -41,10 +38,6 @@ describe('Разделение админских и пользовательс�
   });
 
   afterAll(async () => {
-    // userId остаётся undefined, если регистрация в beforeAll упала — тогда
-    // deleteMany({where:{id: undefined}}) Prisma трактует как «без фильтра» и
-    // удаляет ВСЕХ пользователей. Явная проверка — это разница между потерей
-    // одной тестовой строки и потерей всей таблицы.
     if (userId) await prisma.user.deleteMany({ where: { id: userId } });
     await prisma.adminUser.deleteMany({ where: { email: ADMIN_EMAIL } });
     await prisma.$disconnect();
@@ -84,9 +77,6 @@ describe('Разделение админских и пользовательс�
     expect(res.status).toBe(401);
   });
 
-  // Токены, выпущенные до появления claim'а: подпись верная, но типа нет.
-  // Принимать их как админские значило бы оставить дыру открытой на весь срок
-  // жизни токена — поэтому они отвергаются на обеих поверхностях.
   it('токен с верной подписью, но без claim type отвергается везде', async () => {
     const legacyToken = jwt.sign({ sub: 'legacy', email: 'legacy@chesslab.local' }, process.env.JWT_SECRET);
 

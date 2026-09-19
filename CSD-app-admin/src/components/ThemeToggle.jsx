@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { applyTheme, currentTheme } from '../lib/theme.js';
 
-// Состояние читается из DOM: атрибут уже выставлен инлайн-скриптом в
-// index.html до первой отрисовки, и второй источник правды разошёлся бы с ним.
 export default function ThemeToggle() {
   const [theme, setTheme] = useState(currentTheme);
   const dark = theme === 'dark';

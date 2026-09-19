@@ -4,9 +4,6 @@ import { handleApiError } from '../lib/authError.js';
 import { formatDate } from '../lib/format.js';
 import EntityListView from './EntityListView.jsx';
 
-// Аккаунты покупателей: поиск по почте и ручная выдача доступа к заданиям.
-// Открытый аккаунт заменяет список целиком — тот же приём, что у форм этапа и
-// задания (.entity-form-screen), а не модальное окно.
 export default function UsersView({ notify }) {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
@@ -71,12 +68,11 @@ export default function UsersView({ notify }) {
   );
 }
 
-// Карточка аккаунта: чем он владеет и откуда это право взялось.
 function UserCard({ userId, notify, onBack }) {
   const [user, setUser] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [stages, setStages] = useState([]);
-  const [mode, setMode] = useState('assignment'); // 'assignment' | 'stage'
+  const [mode, setMode] = useState('assignment');
   const [assignmentId, setAssignmentId] = useState('');
   const [stageId, setStageId] = useState('');
   const [note, setNote] = useState('');
@@ -145,13 +141,8 @@ function UserCard({ userId, notify, onBack }) {
 
   if (!user) return <div className="entity-form-screen">{backBtn}</div>;
 
-  // Задания, которых у аккаунта ещё нет, — выдавать уже имеющееся сервер
-  // всё равно откажет (409), незачем предлагать это в списке.
   const ownedIds = new Set(user.access.map(a => a.assignment.id));
   const grantable = assignments.filter(a => !ownedIds.has(a.id));
-  // Этапы, где есть хоть одно опубликованное задание, которого у аккаунта ещё
-  // нет: выдавать этап, где всё уже открыто (или нечего открывать), сервер
-  // откажет.
   const grantableStages = stages.filter(s =>
     assignments.some(a => a.stageId === s.id && a.status === 'published' && !ownedIds.has(a.id))
   );

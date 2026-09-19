@@ -1,7 +1,6 @@
 import { PALETTE } from '../../lib/board.js';
 import { PIECE_ART } from '../../lib/pieceArt.js';
 
-// Порт buildPalette()/renderPalette() из admins/js/position-editor.js.
 export default function Palette({ selected, onSelect }) {
   return (
     <div className="palette">

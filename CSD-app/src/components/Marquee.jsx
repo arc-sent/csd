@@ -1,12 +1,8 @@
 import {useEffect, useRef, useState} from 'react';
 
 const WORDS = ['ТАКТИКА', 'РАСЧЁТ', 'ВНИМАНИЕ', 'СИСТЕМА', 'ПРОГРЕСС'];
-const SPEED = 70; // пикселей в секунду
+const SPEED = 70;
 
-/**
- * Бесконечная лента: группа слов копируется, пока не перекроет экран с запасом,
- * и сдвигается ровно на ширину одной группы — стык получается незаметным.
- */
 export function Marquee() {
   const viewportRef = useRef(null);
   const groupRef = useRef(null);
@@ -26,12 +22,8 @@ export function Marquee() {
     };
 
     measure();
-    // Пересчёт после загрузки шрифта обязателен: первый замер идёт по
-    // резервной гарнитуре, она шире, и сдвиг не совпал бы с шириной группы.
     document.fonts?.ready.then(measure);
 
-    // Следим и за лентой, и за группой: ширина группы меняется,
-    // когда подгружается шрифт, а ширина ленты — при ресайзе окна.
     if (!window.ResizeObserver) {
       window.addEventListener('resize', measure);
       return () => window.removeEventListener('resize', measure);

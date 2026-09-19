@@ -1,22 +1,3 @@
-// npm run dev:money — поднимает сервер (как обычный `npm run dev`) и туннель
-// ngrok в порт сервера одновременно, печатает готовый адрес вебхука ЮKassa.
-//
-// Зачем это вообще нужно: ЮKassa подтверждает оплату вебхуком —
-// POST-запросом СО СВОЕЙ стороны на наш сервер (см. payments.service.js
-// handleWebhook). localhost:4000 недоступен из интернета, поэтому без
-// туннеля вебхук никогда не доходит, платежи навсегда остаются в статусе
-// "pending", и доступ к заданию не выдаётся, даже если деньги реально
-// списаны — это уже случалось на реальных платежах.
-//
-// Пакет — официальный @ngrok/ngrok (актуальный агент v3), НЕ старый
-// пакет "ngrok" с npm: тот тащит заброшенный с 2021 года агент v2, который
-// новые аккаунты ngrok больше не пускают (ERR_NGROK_121).
-//
-// Сервер запускается через программный API nodemon (require('nodemon')),
-// а не спавном дочернего процесса nodemon.cmd через shell: путь проекта
-// содержит скобки и пробел (chess-landing(1)), и на Windows cmd.exe рвёт
-// такой путь на границе пробела, если его не обернуть в кавычки вручную.
-// Программный API этой проблемы не имеет вообще — он ничего не спавнит.
 require('dotenv').config();
 const path = require('path');
 const nodemon = require('nodemon');
@@ -45,8 +26,6 @@ async function main() {
     listener = await ngrok.connect({
       addr: PORT,
       authtoken: process.env.NGROK_AUTHTOKEN,
-      // Без домена ngrok каждый раз выдаёт новый случайный адрес — тогда
-      // ссылку на вебхук в кабинете ЮKassa придётся перевписывать заново.
       domain: process.env.NGROK_DOMAIN || undefined
     });
   } catch (err) {
@@ -69,8 +48,6 @@ async function main() {
   console.log('  Настройки магазина → HTTP-уведомления → payment.succeeded');
   console.log('─────────────────────────────────────────────────────────\n');
 
-  // Обычный `npm run dev` (nodemon) — как есть, со всеми перезапусками при
-  // правках кода. Туннель поднят независимо и переживает эти перезапуски.
   nodemon({ script: SERVER_ENTRY });
 
   nodemon.on('crash', () => {
@@ -87,11 +64,6 @@ async function main() {
     process.exit(0);
   }
 
-  // nodemon сам ловит Ctrl+C, аккуратно гасит свой дочерний процесс (в т.ч.
-  // движок Stockfish внутри него — см. shutdown() в src/server.js) и потом
-  // эмитит 'quit'. Досюда мы просто ждём и добавляем к этому остановку
-  // туннеля. Отдельный SIGINT-хендлер — на случай, если Ctrl+C прилетит ещё
-  // до старта nodemon (например, пока висит ngrok.connect()).
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
   nodemon.on('quit', shutdown);

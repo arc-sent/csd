@@ -7,9 +7,6 @@ import { useTaskDraft, blankLevel } from '../../hooks/useTaskDraft.js';
 import * as storage from '../../lib/storage.js';
 import { handleApiError } from '../../lib/authError.js';
 
-// Порт Admin.router (часть про Позицию/Решение/Проверку одной задачи) из
-// admins/js/admin.js — владеет шагом и черновиком задачи, остальное (список
-// задач) — в LevelsView.
 export default function TaskEditorFlow({ assignmentId, levelId, onDone, onCancel, notify }) {
   const [step, setStep] = useState('position');
   const [loading, setLoading] = useState(Boolean(levelId));
@@ -41,8 +38,6 @@ export default function TaskEditorFlow({ assignmentId, levelId, onDone, onCancel
     <>
       <Stepper current={step} onNavigate={setStep} />
       <main className="admin-main">
-        {/* key={step} — переигрывает admin-view-in при каждой смене шага,
-            как и переключение .active между отдельными <section> в оригинале. */}
         <section key={step} className="admin-view active">
           {step === 'position' && (
             <PositionEditorView draft={draft} dispatch={dispatch} onCancel={onCancel} onNext={setStep} notify={notify} />

@@ -1,7 +1,3 @@
-// Состояние редактируемой задачи (Level) — порт мутируемого `draft` из
-// admin.js/position-editor.js/solution-builder.js на useReducer. Форма
-// состояния 1:1 совпадает с телом запроса /levels (levelPayload в
-// admins/js/board-common.js).
 import { useReducer } from 'react';
 import { emptyBoard } from '../lib/board.js';
 
@@ -19,8 +15,6 @@ export function blankLevel(assignmentId) {
     halfmoveClock: 0,
     fullmoveNumber: 1,
     steps: [],
-    // Результат партии (1-0 / 0-1 / 1/2-1/2) — '' значит «не задан», ReviewView
-    // предлагает автоматически по матовой позиции, админ может выбрать сам.
     result: '',
     status: 'draft',
     assignmentId: assignmentId || null

@@ -3,15 +3,8 @@ import {TrainerPanel} from './TrainerPanel.jsx';
 import {SectionIntro, container, sectionPad} from './ui.jsx';
 import {KNOWN_GAMES} from '../data/knownGames.js';
 
-// Тот же словарь сложности, что в кабинете (AssignmentLevels.jsx) — подпись
-// «Средняя · Тактика» под задачей должна значить одно и то же в обоих местах.
 const DIFFICULTY = {easy: 'Лёгкая', medium: 'Средняя', hard: 'Сложная'};
 
-// Демо-секция лендинга: реальные партии соавторов курса из src/data/knownGames.js,
-// оформленные как список заданий кабинета (AssignmentLevels.jsx) и панель решения
-// (SolveScreen.jsx) — те же номер/название/«Предыдущая-Следующая», что видит
-// оплативший ученик, а не отдельный витринный уровень. TrainerPanel пересоздаётся
-// через key при смене задачи (см. её собственный комментарий про useTrainer).
 const TASKS = KNOWN_GAMES.map((game, index) => ({
   id: game.id,
   level: game,
@@ -22,8 +15,6 @@ const TASKS = KNOWN_GAMES.map((game, index) => ({
 
 export function Demo({notify}) {
   const [activeId, setActiveId] = useState(TASKS[0].id);
-  // Как в кабинете (AssignmentLevels.jsx): «решено» — своё состояние на клиенте,
-  // здесь без сервера (лендинг никого не аутентифицирует), поэтому просто Set id.
   const [solvedIds, setSolvedIds] = useState(() => new Set());
   const position = TASKS.findIndex(task => task.id === activeId);
   const active = TASKS[position] || TASKS[0];
@@ -63,11 +54,6 @@ export function Demo({notify}) {
                 <p className="text-[11px] text-[#8f9189] mt-0.5 truncate">{task.subtitle}</p>
                 {task.meta && <p className="text-[11px] text-[#8f9189] mt-0.5">{task.meta}</p>}
               </div>
-              {/* Тот же приём, что «Решено» в кабинете (AssignmentLevels.jsx):
-                  мягкая заливка акцентом и галочка, без рамки — здесь она на
-                  тех же rgba-оттенках акцента, что и подсветка активной строки
-                  выше, потому что секция всегда тёмная и не видит
-                  --color-accent-soft/-strong кабинета (те зависят от темы сайта). */}
               <span
                 className={`grid place-items-center w-7 h-7 rounded-full shrink-0 text-[12px] font-extrabold ${
                   solvedIds.has(task.id)

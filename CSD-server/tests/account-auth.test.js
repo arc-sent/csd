@@ -22,7 +22,6 @@ describe('Account: регистрация и вход', () => {
   it('регистрирует пользователя, нормализует email и не возвращает хеш пароля', async () => {
     const res = await request(app)
       .post('/api/account/register')
-      // Регистр и пробелы должны схлопнуться в zod-схеме до сервиса.
       .send({ email: `  ${EMAIL.toUpperCase()}  `, password: PASSWORD, name: 'Тест' });
 
     expect(res.status).toBe(201);
@@ -30,7 +29,6 @@ describe('Account: регистрация и вход', () => {
     expect(res.body.user.email).toBe(EMAIL);
     expect(res.body.user.name).toBe('Тест');
     expect(res.body.user.passwordHash).toBeUndefined();
-    // Свежая регистрация — почта ещё не подтверждена (см. email-verification.test.js).
     expect(res.body.user.emailVerified).toBe(false);
   });
 
@@ -62,8 +60,6 @@ describe('Account: регистрация и вход', () => {
     expect(typeof res.body.token).toBe('string');
   });
 
-  // Один и тот же ответ на «нет такого аккаунта» и «неверный пароль» —
-  // иначе по разнице ответов можно перебирать существующие email.
   it('на неверный пароль и на несуществующий email отвечает одинаково', async () => {
     const wrongPassword = await request(app)
       .post('/api/account/login')
@@ -79,7 +75,7 @@ describe('Account: регистрация и вход', () => {
 
   it('аккаунт без пароля (будущий OAuth) нельзя пройти обычным входом', async () => {
     const oauthEmail = 'test-account-auth-oauth@chesslab.local';
-    await prisma.user.create({ data: { email: oauthEmail } }); // passwordHash = null
+    await prisma.user.create({ data: { email: oauthEmail } });
     const res = await request(app).post('/api/account/login').send({ email: oauthEmail, password: PASSWORD });
     expect(res.status).toBe(401);
   });

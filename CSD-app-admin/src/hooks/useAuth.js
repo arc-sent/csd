@@ -1,11 +1,9 @@
-// Порт admins/js/auth.js под React: проверка токена при загрузке, логин/
-// логаут, единая реакция на истёкшую сессию (см. lib/authError.js).
 import { useCallback, useEffect, useState } from 'react';
 import * as api from '../lib/api.js';
 import { setSessionExpiredHandler } from '../lib/authError.js';
 
 export function useAuth() {
-  const [status, setStatus] = useState('checking'); // 'checking' | 'authenticated' | 'unauthenticated'
+  const [status, setStatus] = useState('checking');
   const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
