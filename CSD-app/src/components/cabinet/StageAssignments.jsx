@@ -47,8 +47,10 @@ function OwnedCard({assignment, index, onOpen}) {
         {String(index + 1).padStart(2, '0')}
       </span>
       <PieceBadge piece={piece} />
-      <h3 className="font-display text-[19px] leading-[1.15] tracking-[-.03em] mb-2">{assignment.name}</h3>
-      <p className="text-[13px] leading-[1.6] text-muted mb-4">
+      <h3 className="font-display text-[19px] leading-[1.15] tracking-[-.03em] mb-2 [overflow-wrap:anywhere]">{assignment.name}</h3>
+      {/* [overflow-wrap:anywhere]: описание вводит админ, в нём может оказаться
+          строка без пробелов — без переноса она вылезает за карточку. */}
+      <p className="text-[13px] leading-[1.6] text-muted mb-4 line-clamp-3 [overflow-wrap:anywhere]">
         {assignment.description || 'Задание курса'}
       </p>
 

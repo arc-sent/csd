@@ -54,7 +54,7 @@ export function SectionIntro({label: labelText, title, note, split = false, clas
         <h2 className={heading}>{title}</h2>
       </div>
       {note && (
-        <p className="text-muted text-sm leading-[1.7] m-0 lg:pt-[30px]">{note}</p>
+        <p className="text-muted text-sm leading-[1.7] m-0 lg:pt-[30px] [overflow-wrap:anywhere]">{note}</p>
       )}
     </div>
   );

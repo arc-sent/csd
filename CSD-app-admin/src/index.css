@@ -309,7 +309,7 @@ textarea.admin-input{min-height:76px;padding:10px 14px;resize:vertical}
 .entity-form-screen{padding-top:6px}
 /* Поля слева, живой предпросмотр карточки справа — вместо узкой колонки с
    пустым пространством во всю оставшуюся ширину экрана. */
-.entity-form-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;margin-top:8px;align-items:start}
+.entity-form-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:48px;margin-top:8px;align-items:start}
 .entity-form-fields .entity-form-input{min-height:52px;font-size:14px}
 .entity-form-fields textarea.entity-form-input{min-height:260px;padding-top:14px;resize:vertical}
 .entity-form-preview{position:sticky;top:24px}
@@ -319,17 +319,17 @@ textarea.admin-input{min-height:76px;padding:10px 14px;resize:vertical}
 }
 .empty-state{display:none;text-align:center;color:var(--muted);font-size:13px;padding:60px 20px;border:1px dashed var(--line);border-radius:var(--radius);background:var(--paper)}
 .levels-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.level-card{border:1px solid var(--line);border-radius:22px;background:var(--white);overflow:hidden;display:flex;flex-direction:column;transition:.2s ease}
+.level-card{min-width:0;border:1px solid var(--line);border-radius:22px;background:var(--white);overflow:hidden;display:flex;flex-direction:column;transition:.2s ease}
 .level-card:hover{box-shadow:0 12px 30px rgba(18,19,17,.06);transform:translateY(-2px)}
 .mini-preview-board{aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);background:#e5ddcf}
 .mini-preview-board span{position:relative;display:block}
 .mini-preview-board span.light{background:#eee7da}
 .mini-preview-board span.dark{background:#b98f6a}
 .mini-preview-board img{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom}
-.level-card-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:4px}
+.level-card-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:4px;min-width:0}
 .level-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.level-card-top h3{font-family:Manrope,sans-serif;font-size:17px;letter-spacing:-.02em;margin:0}
-.level-card-desc{font-size:12px;color:var(--muted);line-height:1.5;margin:2px 0 8px;min-height:18px}
+.level-card-top h3{font-family:Manrope,sans-serif;font-size:17px;letter-spacing:-.02em;margin:0;min-width:0;overflow-wrap:anywhere}
+.level-card-desc{font-size:12px;color:var(--muted);line-height:1.5;margin:2px 0 8px;min-height:18px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .level-card-meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10px;color:#8a8b84;margin-bottom:2px}
 .level-card-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 /* В оригинале кнопки тут не растягиваются (auto-width) — одиночная кнопка,
