@@ -18,7 +18,7 @@ const ogSvg = `
       <tspan fill="#ff6b2d">♞</tspan>
       <tspan dx="12">ChessSchool</tspan><tspan fill="#ff6b2d">Dinamik</tspan>
     </text>
-    <text x="80" y="200" font-size="22" font-weight="700" fill="#9ea097" letter-spacing="4">ПЛАТФОРМА ДЛЯ ШАХМАТНОЙ ТАКТИКИ</text>
+    <text x="80" y="200" font-size="22" font-weight="700" fill="#9ea097" letter-spacing="4">ШКОЛА ШАХМАТНОЙ ДИНАМИКИ</text>
     <text x="80" y="300" font-size="72" font-weight="700" letter-spacing="-3">Начни <tspan fill="#ff6b2d">видеть</tspan></text>
     <text x="80" y="382" font-size="72" font-weight="700" letter-spacing="-3">комбинации на</text>
     <text x="80" y="464" font-size="72" font-weight="700" letter-spacing="-3">несколько ходов вперёд.</text>

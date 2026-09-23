@@ -7,18 +7,28 @@ import {buildHref} from '../lib/route.js';
 
 const NAV = [
   ['#how', 'Как это работает'],
+  ['/metodika/', 'Методика'],
   ['#plans', 'Тарифы'],
   ['#reviews', 'Отзывы'],
   ['#contacts', 'Контакты']
 ];
 
-const navHref = (hash, isCabinet) => (isCabinet ? `${window.location.pathname}${hash}` : hash);
+// Абсолютные пути (/metodika) — настоящая отдельная страница, не якорь
+// текущей: префикс пути кабинета к ним не добавляем, в отличие от '#hash'.
+// На /metodika (standalone) секций лендинга на странице нет, поэтому '#hash'
+// ведёт обратно на главную, к этому же якорю, а не повисает бесполезной
+// ссылкой без цели на текущей странице.
+const navHref = (hash, isCabinet, standalone) => {
+  if (hash.startsWith('/')) return hash;
+  if (standalone) return `/${hash}`;
+  return isCabinet ? `${window.location.pathname}${hash}` : hash;
+};
 
 const textButton =
   'text-[13px] font-semibold text-muted transition duration-200 hover:text-accent';
 
-export function Brand({className = '', isCabinet = false}) {
-  const href = isCabinet ? window.location.pathname : '#top';
+export function Brand({className = '', isCabinet = false, standalone = false}) {
+  const href = isCabinet ? window.location.pathname : standalone ? '/' : '#top';
   return (
     <a
       className={`flex items-center gap-2.5 font-display font-extrabold tracking-[-.04em] ${className}`}
@@ -34,13 +44,22 @@ export function Brand({className = '', isCabinet = false}) {
   );
 }
 
-export function Header({isCabinet = false, navigate, onOpenAuth}) {
+// standalone — страница вне обычного лендинг/кабинет переключения (сейчас
+// только /metodika, см. lib/pagePath.js): переход в кабинет и лого ведут на
+// настоящий '/' обычной ссылкой, а не через buildHref/navigate из route.js,
+// которые считают текущий pathname базой и на постороннем пути дали бы
+// битый адрес вроде '/metodika?view=cabinet'.
+export function Header({isCabinet = false, standalone = false, navigate, onOpenAuth}) {
   const [open, setOpen] = useState(false);
   const {status, user} = useAuthContext();
   const authenticated = status === 'authenticated' || status === 'unverified';
 
-  const cabinetHref = buildHref({view: 'cabinet'});
+  const cabinetHref = standalone ? '/?view=cabinet' : buildHref({view: 'cabinet'});
   const openCabinet = event => {
+    if (standalone) {
+      setOpen(false);
+      return;
+    }
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
     event.preventDefault();
     setOpen(false);
@@ -53,11 +72,11 @@ export function Header({isCabinet = false, navigate, onOpenAuth}) {
       id="top"
     >
       <div className={`${container} flex items-center justify-between gap-7 h-[68px] sm:h-[76px]`}>
-        <Brand isCabinet={isCabinet} />
+        <Brand isCabinet={isCabinet} standalone={standalone} />
 
         <nav className="hidden lg:flex gap-[26px] text-[13px] font-semibold text-muted" aria-label="Основная навигация">
           {NAV.map(([href, text]) => (
-            <a key={href} className="hover:text-accent" href={navHref(href, isCabinet)}>
+            <a key={href} className="hover:text-accent" href={navHref(href, isCabinet, standalone)}>
               {text}
             </a>
           ))}
@@ -113,7 +132,7 @@ export function Header({isCabinet = false, navigate, onOpenAuth}) {
             <a
               key={href}
               className="block py-3 text-sm font-bold"
-              href={navHref(href, isCabinet)}
+              href={navHref(href, isCabinet, standalone)}
               onClick={() => setOpen(false)}
             >
               {text}

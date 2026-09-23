@@ -15,13 +15,23 @@ await build({
 });
 
 const {render} = await import(pathToFileURL(path.join(serverDir, 'entry-server.js')).href);
-const appHtml = render();
-
-const indexPath = path.join(dist, 'index.html');
-const template = await readFile(indexPath, 'utf8');
 const mount = '<div id="root"></div>';
-if (!template.includes(mount)) throw new Error(`В dist/index.html не найден ${mount}`);
-await writeFile(indexPath, template.replace(mount, `<div id="root">${appHtml}</div>`));
-await rm(serverDir, {recursive: true, force: true});
 
-console.log(`Пререндер: лендинг вставлен в dist/index.html (${(appHtml.length / 1024).toFixed(1)} kB HTML)`);
+// Каждая страница — свой физический index.html в dist (см. vite.config.js
+// rollupOptions.input) и свой серверный рендер под свой путь, чтобы у
+// краулера не оставалось пустого <div id="root"> без JS.
+const pages = [
+  {file: 'index.html', ssrPath: '/'},
+  {file: 'metodika/index.html', ssrPath: '/metodika'}
+];
+
+for (const {file, ssrPath} of pages) {
+  const filePath = path.join(dist, file);
+  const template = await readFile(filePath, 'utf8');
+  if (!template.includes(mount)) throw new Error(`В dist/${file} не найден ${mount}`);
+  const html = render(ssrPath);
+  await writeFile(filePath, template.replace(mount, `<div id="root">${html}</div>`));
+  console.log(`Пререндер: ${ssrPath} вставлен в dist/${file} (${(html.length / 1024).toFixed(1)} kB HTML)`);
+}
+
+await rm(serverDir, {recursive: true, force: true});

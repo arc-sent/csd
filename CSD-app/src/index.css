@@ -362,6 +362,27 @@ body {
   user-select: none;
 }
 
+/* Пульсация «+» у раскрывающихся карточек методики (DynamicsPrinciples) —
+   подсказка, что по заголовку можно кликнуть. Гаснет, как только карточка
+   открыта: .group[open] переопределяет анимацию ниже по каскаду. */
+@keyframes plus-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.5;
+  }
+}
+.plus-pulse {
+  animation: plus-pulse 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.group[open] .plus-pulse {
+  animation: none;
+}
+
 @keyframes stage-pulse {
   0%,
   100% {
@@ -377,6 +398,9 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .stage-pulse {
+    animation: none;
+  }
+  .plus-pulse {
     animation: none;
   }
   .marquee-track {

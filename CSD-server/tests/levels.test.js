@@ -81,6 +81,33 @@ describe('Levels module', () => {
     createdIds.push(res.body.id);
   });
 
+  it('сохраняет и возвращает solvedNote — объяснение после решения', async () => {
+    const res = await request(app)
+      .post('/api/levels')
+      .set('Authorization', `Bearer ${token}`)
+      .send(samplePayload({ solvedNote: 'Конь идёт на f6, открывая вилку.' }));
+    expect(res.status).toBe(201);
+    expect(res.body.solvedNote).toBe('Конь идёт на f6, открывая вилку.');
+
+    const getRes = await request(app)
+      .get(`/api/levels/${res.body.id}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.solvedNote).toBe('Конь идёт на f6, открывая вилку.');
+
+    createdIds.push(res.body.id);
+  });
+
+  it('по умолчанию сохраняет solvedNote пустой строкой, если не передан', async () => {
+    const res = await request(app)
+      .post('/api/levels')
+      .set('Authorization', `Bearer ${token}`)
+      .send(samplePayload());
+    expect(res.status).toBe(201);
+    expect(res.body.solvedNote).toBe('');
+    createdIds.push(res.body.id);
+  });
+
   it('отдаёт список, включающий созданный уровень', async () => {
     const res = await request(app).get('/api/levels').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);

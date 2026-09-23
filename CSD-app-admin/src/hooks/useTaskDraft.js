@@ -6,6 +6,7 @@ export function blankLevel(assignmentId) {
     id: null,
     name: '',
     description: '',
+    solvedNote: '',
     difficulty: 'medium',
     category: '',
     position: emptyBoard(),

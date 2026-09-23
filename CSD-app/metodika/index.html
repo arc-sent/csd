@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Второй HTML-вход для Vite (multi-page build) — тот же приём, что и в
+       корневом index.html, но со своим заголовком/описанием/canonical для
+       страницы /metodika. См. vite.config.js (rollupOptions.input) и
+       scripts/prerender.mjs, который дособирает сюда же серверный HTML. -->
+  <title>Методика курса — принципы шахматной динамики | ChessSchoolDinamik</title>
+  <meta name="description" content="Как устроена шахматная динамика: три способа создания слабостей и десять тактических мотивов с определениями и разобранными позициями из практики авторов курса." />
+  <link rel="canonical" href="%VITE_SITE_URL%/metodika" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="theme-color" content="#f5f2ea" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#1b1c19" media="(prefers-color-scheme: dark)" />
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="ChessSchoolDinamik" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta property="og:url" content="%VITE_SITE_URL%/metodika" />
+  <meta property="og:title" content="Методика курса — принципы шахматной динамики | ChessSchoolDinamik" />
+  <meta property="og:description" content="Три способа создания слабостей и десять тактических мотивов с определениями и разобранными позициями из практики авторов курса." />
+  <meta property="og:image" content="%VITE_SITE_URL%/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="ChessSchoolDinamik — методика курса" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Методика курса — принципы шахматной динамики | ChessSchoolDinamik" />
+  <meta name="twitter:description" content="Три способа создания слабостей и десять тактических мотивов с примерами из практики авторов курса." />
+  <meta name="twitter:image" content="%VITE_SITE_URL%/og.png" />
+
+  <link rel="preload" href="/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('chesslab-theme');
+        var dark = saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      } catch (e) {
+        // приватный режим/заблокированное хранилище — остаётся светлая тема
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

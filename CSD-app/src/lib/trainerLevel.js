@@ -33,6 +33,6 @@ export function toTrainerLevel(apiLevel) {
     ...apiLevel,
     hint: '—',
     progress: [0, 100],
-    solvedNote: apiLevel.description || 'Задача решена.'
+    solvedNote: apiLevel.solvedNote || apiLevel.description || 'Задача решена.'
   };
 }

@@ -90,7 +90,7 @@ export function Hero() {
         <Reveal className="max-w-[640px]">
           <div className="inline-flex items-center gap-2.5 text-muted">
             <span className="w-[7px] h-[7px] rounded-full bg-accent" />
-            <span className={label}>Онлайн-тренажёр по шахматной тактике</span>
+            <span className={label}>Школа шахматной динамики</span>
           </div>
           <h1 className="font-display text-[52px] sm:text-[clamp(50px,6vw,84px)] leading-[.97] tracking-[-.07em] my-[22px]">
             Начни <em className="not-italic text-accent">видеть</em> комбинации на несколько ходов вперёд.

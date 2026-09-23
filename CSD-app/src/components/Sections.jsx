@@ -20,7 +20,7 @@ export function Audience() {
     <section className={`bg-paper ${sectionPad}`} id="audience">
       <div className={container}>
         <Reveal>
-          <SectionIntro label="Для кого" title="Кому подходит тренажёр шахматной тактики." />
+          <SectionIntro label="Для кого" title="Кому подходит школа шахматной динамики." />
         </Reveal>
         <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
           {AUDIENCE.map(([index, icon, title, text, href, link, featured], i) => (
@@ -160,9 +160,9 @@ export function Benefits() {
     <section className={`bg-paper ${sectionPad}`}>
       <div className={container}>
         <Reveal className="max-w-[900px] mb-[55px]">
-          <span className={`${label} text-ink`}>Почему тренажёр ChessSchoolDinamik</span>
+          <span className={`${label} text-ink`}>Почему ChessSchoolDinamik</span>
           <h2 className={heading}>
-            Тренировка тактики, которая показывает <em className="not-italic text-accent">процесс</em>, а не
+            Обучение динамике, которое показывает <em className="not-italic text-accent">процесс</em>, а не
             только ответ.
           </h2>
         </Reveal>

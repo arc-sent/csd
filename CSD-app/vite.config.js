@@ -1,6 +1,9 @@
 import {defineConfig, loadEnv} from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import {fileURLToPath} from 'node:url';
+
+const resolvePath = p => fileURLToPath(new URL(p, import.meta.url));
 
 const DEFAULT_SITE_URL = 'https://app.31-76-46-113.sslip.io';
 
@@ -10,6 +13,7 @@ function seoFiles(siteUrl) {
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
     `  <url><loc>${siteUrl}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n` +
+    `  <url><loc>${siteUrl}/metodika</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n` +
     `</urlset>\n`;
   const files = {'/robots.txt': ['text/plain', robots], '/sitemap.xml': ['application/xml', sitemap]};
   return {
@@ -38,6 +42,18 @@ export default defineConfig(({mode}) => {
   return {
     plugins: [react(), tailwindcss(), seoFiles(siteUrl)],
     base: './',
+    // Второй HTML-вход — /metodika как настоящая отдельная страница со своим
+    // адресом (см. metodika/index.html, App.jsx и scripts/prerender.mjs),
+    // а не якорь на лендинге. base: './' — Vite сам пересчитывает
+    // относительные пути к ассетам под глубину каждой страницы.
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolvePath('./index.html'),
+          metodika: resolvePath('./metodika/index.html')
+        }
+      }
+    },
     server: {host: '127.0.0.1', port: 5173},
     preview: {host: '127.0.0.1', port: 4173}
   };

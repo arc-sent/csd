@@ -2,6 +2,7 @@ import {Reveal} from './Reveal.jsx';
 import {Button, container, sectionPad, label} from './ui.jsx';
 import {Brand} from './Header.jsx';
 import {TermsModal} from './TermsModal.jsx';
+import {PrivacyModal} from './PrivacyModal.jsx';
 import {useState} from 'react';
 
 export function FinalCta() {
@@ -33,12 +34,13 @@ export function FinalCta() {
 
 const FOOTER_COLUMNS = [
   ['Навигация', [['#how', 'Как это работает'], ['#plans', 'Тарифы'], ['#reviews', 'Отзывы']]],
-  ['Документы', [['#terms', 'Пользовательское соглашение'], ['#', 'Политика обработки данных'], ['#', 'Реквизиты продавца']]],
+  ['Документы', [['#terms', 'Пользовательское соглашение'], ['#privacy', 'Политика конфиденциальности'], ['#', 'Реквизиты продавца']]],
   ['Контакты', [['mailto:chessdinamika@yandex.ru', 'chessdinamika@yandex.ru'], ['#', 'Telegram'], ['#', 'VK']]]
 ];
 
 export function Footer({isCabinet = false}) {
   const [termsOpen, setTermsOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   return (
     <footer className="bg-dark text-on-dark pt-14 pb-[25px]" id="contacts">
       <div
@@ -47,7 +49,7 @@ export function Footer({isCabinet = false}) {
         <div className="col-span-2 sm:col-span-1">
           <Brand className="text-on-dark" isCabinet={isCabinet} />
           <p className="text-xs text-[#8f9189] max-w-[260px] mt-[18px] mb-3">
-            Платформа для системной тренировки шахматной тактики.
+            Школа шахматной динамики — обучение на разборе конкретных задач.
           </p>
         </div>
         {FOOTER_COLUMNS.map(([title, links]) => (
@@ -64,6 +66,11 @@ export function Footer({isCabinet = false}) {
                         event.preventDefault();
                         setTermsOpen(true);
                       }
+                    : href === '#privacy'
+                    ? event => {
+                        event.preventDefault();
+                        setPrivacyOpen(true);
+                      }
                     : undefined
                 }
               >
@@ -78,6 +85,7 @@ export function Footer({isCabinet = false}) {
         <span>Оплата через ЮKassa · 152-ФЗ</span>
       </div>
       {termsOpen && <TermsModal readOnly onClose={() => setTermsOpen(false)} />}
+      {privacyOpen && <PrivacyModal onClose={() => setPrivacyOpen(false)} />}
     </footer>
   );
 }

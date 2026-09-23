@@ -260,6 +260,14 @@ export default function SolutionBuilderView({ draft, dispatch, onBack, onNext, o
           <ResultField draft={draft} dispatch={dispatch} />
         </div>
 
+        <div className="result-panel">
+          <label className="field-label" htmlFor="level-solved-note">Объяснение после решения</label>
+          <textarea id="level-solved-note" className="admin-input" rows={4} style={{ resize: 'vertical' }}
+            placeholder="Что показать ученику, когда он решит задачу целиком — как в блоке «Интерфейс» на лендинге"
+            value={draft.solvedNote} onChange={e => dispatch({ type: 'SET_FIELD', field: 'solvedNote', value: e.target.value })} />
+          <p className="hint-text">Необязательно. Если оставить пустым, ученику покажется краткое описание задачи или общая фраза «Задача решена.».</p>
+        </div>
+
         <label className="toggle-field">
           <input type="checkbox" checked={skipReview} onChange={e => setSkipReview(e.target.checked)} />
           Пропустить шаг «Проверка» для этого уровня — сохранять/публиковать прямо отсюда

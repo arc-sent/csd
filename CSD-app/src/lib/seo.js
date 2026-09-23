@@ -1,7 +1,7 @@
 import {useEffect} from 'react';
 
 export const SITE_NAME = 'ChessSchoolDinamik';
-export const DEFAULT_TITLE = 'Шахматные задачи онлайн — тренажёр тактики | ChessSchoolDinamik';
+export const DEFAULT_TITLE = 'Шахматные задачи онлайн — школа шахматной динамики | ChessSchoolDinamik';
 const DEFAULT_ROBOTS = 'index, follow, max-image-preview:large';
 
 export const SITE_URL = (

@@ -31,6 +31,7 @@ const enPassantSchema = z
 const levelBodySchema = z.object({
   name: z.string().min(1, 'Название обязательно'),
   description: z.string().optional().default(''),
+  solvedNote: z.string().optional().default(''),
   difficulty: z.enum(['easy', 'medium', 'hard']).optional().default('medium'),
   category: z.string().optional().default(''),
   position: positionSchema,

@@ -198,6 +198,7 @@ model Level {
   id             String      @id @default(cuid())
   name           String
   description    String      @default("")
+  solvedNote     String      @default("") // объяснение, показывается после полного решения задачи
   difficulty     String      @default("medium") // easy | medium | hard
   category       String      @default("")
   position       Json

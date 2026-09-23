@@ -54,11 +54,11 @@ export function getLevel(id) {
 }
 function levelPayload(level) {
   const {
-    name, description, difficulty, category, position, turn, castling,
+    name, description, solvedNote, difficulty, category, position, turn, castling,
     enPassant, halfmoveClock, fullmoveNumber, steps, result, status, assignmentId
   } = level;
   return {
-    name, description, difficulty, category, position, turn, castling,
+    name, description, solvedNote, difficulty, category, position, turn, castling,
     enPassant: enPassant || null,
     halfmoveClock: halfmoveClock == null ? 0 : halfmoveClock,
     fullmoveNumber: fullmoveNumber == null ? 1 : fullmoveNumber,

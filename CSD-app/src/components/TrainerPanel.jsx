@@ -117,17 +117,33 @@ export function TrainerPanel({level, notify, title, eyebrow, subtitle, onSolved,
             </div>
           </div>
 
-          <div
-            className={`order-5 lg:order-none flex gap-3 mx-[15px] mt-[9px] sm:mx-5 sm:mt-3.5 lg:mx-0 lg:mt-0 py-2 px-[11px] sm:p-[13px] rounded-xl border transition duration-200 ${
-              feedbackTone[trainer.feedback.state]
-            }`}
-          >
-            <span className="text-sm">{feedbackIcon[trainer.feedback.state]}</span>
-            <div className="text-ink">
-              <strong className="block text-[11px]">{trainer.feedback.title}</strong>
-              <small className="block text-[10px] text-faint mt-0.5">{trainer.feedback.note}</small>
+          {trainer.solved ? (
+            // Задача решена целиком — объяснение (level.solvedNote) показываем
+            // отдельным крупным блоком, а не в той же тесной строке, что и
+            // мимолётные подсказки «ход верный/неверный»: это финальный текст,
+            // который должен быть заметен, а не потеряться среди мелкого шрифта.
+            <div className="order-5 lg:order-none mx-[15px] mt-[9px] sm:mx-5 sm:mt-3.5 lg:mx-0 lg:mt-0 p-4 sm:p-5 rounded-2xl border border-success-line bg-success-bg">
+              <div className="flex items-center gap-2.5 text-success">
+                <span className="text-lg leading-none">✓</span>
+                <strong className="font-display text-[15px] sm:text-base tracking-[-.02em]">{trainer.feedback.title}</strong>
+              </div>
+              {trainer.feedback.note && (
+                <p className="text-[13px] text-ink leading-[1.6] mt-2.5">{trainer.feedback.note}</p>
+              )}
             </div>
-          </div>
+          ) : (
+            <div
+              className={`order-5 lg:order-none flex gap-3 mx-[15px] mt-[9px] sm:mx-5 sm:mt-3.5 lg:mx-0 lg:mt-0 py-2 px-[11px] sm:p-[13px] rounded-xl border transition duration-200 ${
+                feedbackTone[trainer.feedback.state]
+              }`}
+            >
+              <span className="text-sm">{feedbackIcon[trainer.feedback.state]}</span>
+              <div className="text-ink">
+                <strong className="block text-[11px]">{trainer.feedback.title}</strong>
+                <small className="block text-[10px] text-faint mt-0.5">{trainer.feedback.note}</small>
+              </div>
+            </div>
+          )}
 
           <div className="order-6 lg:order-none grid grid-cols-3 lg:grid-cols-[1fr_auto_1fr] gap-2 mx-[15px] mt-[9px] sm:mx-5 sm:mt-3.5 lg:mx-0 lg:mt-3.5">
             <button type="button" className={ghostBtn} disabled={!trainer.canPrev} onClick={trainer.onPrev}>

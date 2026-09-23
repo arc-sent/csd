@@ -79,6 +79,10 @@ export default function ReviewView({ draft, dispatch, onEdit, onSaveDraft, onPub
             </div>
           )) : <p className="review-desc">Решение не задано.</p>}
         </div>
+        <div className="review-steps">
+          <h4>Объяснение после решения</h4>
+          <p className="review-desc">{draft.solvedNote || 'Не задано — ученик увидит краткое описание задачи или общую фразу «Задача решена.».'}</p>
+        </div>
       </div>
 
       <div className="panel-actions review-actions">
