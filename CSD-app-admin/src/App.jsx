@@ -51,7 +51,7 @@ export default function App() {
       <header className="site-header" id="top">
         <div className="container header-inner">
           <span className="brand">
-            <span className="brand-mark" aria-hidden="true">♞</span>
+            <img className="brand-logo" src="/logo.png" alt="" width="38" height="38" />
             <span className="brand-name">ChessSchool<span>Dinamik</span></span>
           </span>
           {status === 'authenticated' && (

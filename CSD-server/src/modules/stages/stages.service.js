@@ -3,11 +3,15 @@ const { AppError } = require('../../shared/errors');
 
 const WITH_TOTALS = {
   _count: { select: { assignments: true } },
-  assignments: { where: { status: 'published' }, select: { price: true } }
+  assignments: { where: { status: 'published' }, select: { price: true, bonus: true } }
 };
 
 function withTotal({ assignments, ...stage }) {
-  return { ...stage, assignmentsTotal: assignments.reduce((sum, a) => sum + a.price, 0) };
+  return {
+    ...stage,
+    assignmentsTotal: assignments.reduce((sum, a) => sum + a.price, 0),
+    bonusTotal: assignments.filter(a => a.bonus).reduce((sum, a) => sum + a.price, 0)
+  };
 }
 
 async function list() {

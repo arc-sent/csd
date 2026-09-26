@@ -72,6 +72,7 @@ describe('Public module (витрина лендинга)', () => {
       id: publishedAssignmentId,
       name: 'Опубликованное задание',
       price: 990,
+      bonus: false,
       tasksCount: 1
     });
   });
@@ -80,6 +81,6 @@ describe('Public module (витрина лендинга)', () => {
     const res = await request(app).get('/api/public/stages');
     const stage = res.body.find(s => s.id === publishedStageId);
     expect(Object.keys(stage).sort()).toEqual(['assignments', 'id', 'name', 'price']);
-    expect(Object.keys(stage.assignments[0]).sort()).toEqual(['id', 'name', 'price', 'tasksCount']);
+    expect(Object.keys(stage.assignments[0]).sort()).toEqual(['bonus', 'id', 'name', 'price', 'tasksCount']);
   });
 });

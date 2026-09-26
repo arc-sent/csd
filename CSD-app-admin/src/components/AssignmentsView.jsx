@@ -13,6 +13,7 @@ export default function AssignmentsView({ stage, notify, onBack, onOpenAssignmen
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formPrice, setFormPrice] = useState(1200);
+  const [formBonus, setFormBonus] = useState(false);
 
   async function reload() {
     try {
@@ -38,12 +39,14 @@ export default function AssignmentsView({ stage, notify, onBack, onOpenAssignmen
     setFormName('');
     setFormDescription('');
     setFormPrice(1200);
+    setFormBonus(false);
   }
   function openEdit(assignment) {
     setEditing(assignment);
     setFormName(assignment.name);
     setFormDescription(assignment.description);
     setFormPrice(assignment.price);
+    setFormBonus(Boolean(assignment.bonus));
   }
   function closeForm() {
     setEditing(null);
@@ -57,6 +60,7 @@ export default function AssignmentsView({ stage, notify, onBack, onOpenAssignmen
     assignment.name = name;
     assignment.description = formDescription.trim();
     assignment.price = Math.max(0, Number(formPrice) || 0);
+    assignment.bonus = formBonus;
     try {
       await storage.upsertAssignment(assignment);
       notify(editing.id ? 'Задание обновлено.' : 'Задание создано.');
@@ -111,6 +115,13 @@ export default function AssignmentsView({ stage, notify, onBack, onOpenAssignmen
           <label className="field-label" htmlFor="assignment-form-price">Цена, ₽</label>
           <input type="number" id="assignment-form-price" className="admin-input entity-form-input" min="0" step="0.01"
             value={formPrice} onChange={e => setFormPrice(e.target.value)} />
+          <label className="toggle-field" style={{ marginTop: 14 }}>
+            <input type="checkbox" checked={formBonus} onChange={e => setFormBonus(e.target.checked)} />
+            Бонус: выдаётся бесплатно при покупке этапа целиком
+          </label>
+          <p className="level-card-desc">
+            Такое задание не учитывается в рекомендуемой цене этапа: ученик, купивший этап целиком, получает его в подарок. Отдельно его по-прежнему можно купить за указанную цену.
+          </p>
         </>}
         preview={
           <article className={'level-card entity-card status-' + (editing.status || 'draft')}>
@@ -123,6 +134,7 @@ export default function AssignmentsView({ stage, notify, onBack, onOpenAssignmen
               <div className="level-card-meta">
                 <span>Задач: {count}</span>
                 <span>{formatPrice(Number(formPrice) || 0)}</span>
+                {formBonus && <span>♛ Бонус при покупке этапа</span>}
               </div>
             </div>
           </article>
@@ -164,6 +176,7 @@ export default function AssignmentsView({ stage, notify, onBack, onOpenAssignmen
               <div className="level-card-meta">
                 <span>Задач: {count}</span>
                 <span>Цена: {formatPrice(assignment.price)}</span>
+                {assignment.bonus && <span>♛ Бонус при покупке этапа</span>}
                 <span>Изменён: {formatDate(assignment.updatedAt)}</span>
               </div>
               <div className="level-card-actions">

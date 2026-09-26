@@ -95,6 +95,8 @@ export default function StagesView({ notify, onOpenStage }) {
     const total = editing.assignmentsTotal || 0;
     const priceNum = Number(formPrice) || 0;
     const discount = stageDiscountPercent(priceNum, total);
+    const bonusTotal = editing.bonusTotal || 0;
+    const recommended = total - bonusTotal;
     return (
       <EntityForm
         sectionLabel="Курс"
@@ -113,6 +115,15 @@ export default function StagesView({ notify, onOpenStage }) {
           <input type="number" id="stage-form-price" className="admin-input entity-form-input" min="0" step="0.01"
             value={formPrice} onChange={e => setFormPrice(e.target.value)} />
           <p className="level-card-desc">
+            {bonusTotal > 0 && total > 0 && (
+              <>
+                Бонусные задания на {formatPrice(bonusTotal)} выдаются бесплатно. Рекомендуемая цена этапа: {formatPrice(recommended)}.{' '}
+                {Number(formPrice) !== recommended && (
+                  <button type="button" className="panel-button ghost" onClick={() => setFormPrice(recommended)}>Подставить</button>
+                )}
+                <br />
+              </>
+            )}
             {priceNum <= 0
               ? 'Покупка этапа целиком выключена (цена 0) — задания продаются только поштучно.'
               : total <= 0

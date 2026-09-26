@@ -14,6 +14,7 @@ function seoFiles(siteUrl) {
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
     `  <url><loc>${siteUrl}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n` +
     `  <url><loc>${siteUrl}/metodika</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n` +
+    `  <url><loc>${siteUrl}/avtor</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n` +
     `</urlset>\n`;
   const files = {'/robots.txt': ['text/plain', robots], '/sitemap.xml': ['application/xml', sitemap]};
   return {
@@ -50,7 +51,8 @@ export default defineConfig(({mode}) => {
       rollupOptions: {
         input: {
           main: resolvePath('./index.html'),
-          metodika: resolvePath('./metodika/index.html')
+          metodika: resolvePath('./metodika/index.html'),
+          avtor: resolvePath('./avtor/index.html')
         }
       }
     },

@@ -72,6 +72,23 @@ describe('Assignments module', () => {
     createdIds.push(res.body.id);
   });
 
+  it('по умолчанию не бонусное, а флаг bonus сохраняется и меняется', async () => {
+    const created = await request(app)
+      .post('/api/assignments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ stageId, name: 'Бонус', price: 1200 });
+    expect(created.status).toBe(201);
+    expect(created.body.bonus).toBe(false);
+    createdIds.push(created.body.id);
+
+    const updated = await request(app)
+      .put(`/api/assignments/${created.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ stageId, name: 'Бонус', price: 1200, bonus: true });
+    expect(updated.status).toBe(200);
+    expect(updated.body.bonus).toBe(true);
+  });
+
   it('позволяет задать и изменить цену задания', async () => {
     const created = await request(app)
       .post('/api/assignments')

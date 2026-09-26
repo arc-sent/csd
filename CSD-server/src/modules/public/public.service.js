@@ -15,6 +15,7 @@ async function listStages() {
           id: true,
           name: true,
           price: true,
+          bonus: true,
           _count: { select: { levels: { where: { status: 'published' } } } }
         }
       }
@@ -29,6 +30,7 @@ async function listStages() {
       id: assignment.id,
       name: assignment.name,
       price: assignment.price,
+      bonus: assignment.bonus,
       tasksCount: assignment._count.levels
     }))
   }));

@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = file => path.join(root, 'public', file);
 
-const knight = await readFile(out('pieces/wN.png'));
+const logo = await readFile(out('logo.png'));
 
 const ogSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
@@ -14,9 +14,8 @@ const ogSvg = `
   <circle cx="1080" cy="560" r="300" fill="none" stroke="#363935" stroke-width="2"/>
   <circle cx="1180" cy="40" r="360" fill="#ff6b2d" fill-opacity=".12"/>
   <g font-family="Arial, Helvetica, sans-serif" fill="#f5f2ea">
-    <text x="80" y="118" font-size="30" font-weight="700">
-      <tspan fill="#ff6b2d">♞</tspan>
-      <tspan dx="12">ChessSchool</tspan><tspan fill="#ff6b2d">Dinamik</tspan>
+    <text x="150" y="118" font-size="30" font-weight="700">
+      <tspan>ChessSchool</tspan><tspan fill="#ff6b2d">Dinamik</tspan>
     </text>
     <text x="80" y="200" font-size="22" font-weight="700" fill="#9ea097" letter-spacing="4">ШКОЛА ШАХМАТНОЙ ДИНАМИКИ</text>
     <text x="80" y="300" font-size="72" font-weight="700" letter-spacing="-3">Начни <tspan fill="#ff6b2d">видеть</tspan></text>
@@ -27,7 +26,10 @@ const ogSvg = `
 </svg>`;
 
 await sharp(Buffer.from(ogSvg))
-  .composite([{input: await sharp(knight).resize(260, 260, {fit: 'inside'}).toBuffer(), left: 900, top: 330}])
+  .composite([
+    {input: await sharp(logo).resize(60, 60, {fit: 'inside'}).toBuffer(), left: 80, top: 72},
+    {input: await sharp(logo).resize(220, 220, {fit: 'inside'}).toBuffer(), left: 940, top: 340}
+  ])
   .png()
   .toFile(out('og.png'));
 
@@ -36,7 +38,7 @@ const iconSvg = `
   <rect width="180" height="180" rx="40" fill="#1b1c19"/>
 </svg>`;
 await sharp(Buffer.from(iconSvg))
-  .composite([{input: await sharp(knight).resize(120, 120, {fit: 'inside'}).toBuffer(), left: 30, top: 28}])
+  .composite([{input: await sharp(logo).resize(140, 140, {fit: 'inside'}).toBuffer(), left: 20, top: 20}])
   .png()
   .toFile(out('apple-touch-icon.png'));
 

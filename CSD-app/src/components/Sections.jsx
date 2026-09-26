@@ -242,6 +242,8 @@ export function Plans({notify}) {
   }, []);
 
   const stage = stages.find(s => s.id === stageId);
+  const bonusAssignments = stage ? stage.assignments.filter(a => a.bonus) : [];
+  const bonusTotal = bonusAssignments.reduce((sum, a) => sum + a.price, 0);
 
   return (
     <section className={`bg-bg ${sectionPad}`} id="plans">
@@ -254,20 +256,6 @@ export function Plans({notify}) {
                 <div className="mb-3">
                 <div className="flex flex-col items-stretch gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
                   <StageSwitcher stages={stages} value={stageId} onChange={setStageId} pulse={stages.length > 1} />
-                  {stage && stage.price > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => handleBuyStage(stage)}
-                      className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-accent text-on-accent text-[11px] font-extrabold uppercase tracking-[.06em] px-3.5 py-[7px] shadow-[0_8px_18px_rgba(255,107,45,.22)] transition duration-200 hover:-translate-y-0.5"
-                    >
-                      Купить этап целиком · {stage.price.toLocaleString('ru-RU')} ₽
-                      {stageDiscountPercent(stage) > 0 && (
-                        <span className="rounded-full bg-on-accent text-accent px-2 py-[2px] text-[10px]">
-                          −{stageDiscountPercent(stage)}%
-                        </span>
-                      )}
-                    </button>
-                  )}
                 </div>
                 </div>
               )
@@ -277,6 +265,65 @@ export function Plans({notify}) {
             note="Наборы шахматных задач по темам тактики: разбор хода за ходом и мгновенная проверка. Задания продаются поштучно, а весь этап целиком — со скидкой."
           />
         </Reveal>
+        {stage && stage.price > 0 && bonusAssignments.length === 0 && (
+          <Reveal className="mb-6">
+            <button
+              type="button"
+              onClick={() => handleBuyStage(stage)}
+              className="inline-flex items-center justify-center gap-3 font-extrabold min-h-[52px] px-[22px] rounded-[15px] text-sm bg-accent text-on-accent shadow-[0_12px_24px_rgba(255,107,45,.22)] transition duration-200 hover:-translate-y-0.5"
+            >
+              Купить этап целиком · {stage.price.toLocaleString('ru-RU')} ₽
+              {stageDiscountPercent(stage) > 0 && (
+                <span className="rounded-full bg-on-accent text-accent px-2 py-[2px] text-[11px]">
+                  −{stageDiscountPercent(stage)}%
+                </span>
+              )}
+            </button>
+          </Reveal>
+        )}
+        {bonusAssignments.length > 0 && stage.price > 0 && (
+          <Reveal className="mb-6">
+            <div className="flex flex-col gap-4 rounded-[22px] border border-accent/40 bg-accent-soft p-5 sm:flex-row sm:items-center sm:gap-6 sm:p-6">
+              <span
+                className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-bg text-[26px] leading-none text-ink"
+                aria-hidden="true"
+              >
+                ♛
+              </span>
+              <div className="min-w-0 flex-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-[.14em] text-accent-strong">
+                  Бонус при покупке этапа целиком
+                </span>
+                <p className="mt-1 font-display text-[17px] leading-[1.25] tracking-[-.02em] text-ink sm:text-[19px]">
+                  {bonusAssignments.length === 1 ? 'Задание' : 'Задания'}{' '}
+                  {bonusAssignments.map((a, i) => (
+                    <span key={a.id}>
+                      {i > 0 && ', '}
+                      «{a.name}»
+                    </span>
+                  ))}{' '}
+                  — в подарок
+                </p>
+                <p className="mt-1 text-[12px] text-muted">
+                  Вместо {bonusTotal.toLocaleString('ru-RU')} ₽ — бесплатно. Отдельно из этого этапа его можно
+                  купить только за полную цену.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleBuyStage(stage)}
+                className="inline-flex w-full shrink-0 items-center justify-center rounded-xl bg-accent px-5 py-3 text-xs font-extrabold text-on-accent shadow-[0_8px_18px_rgba(255,107,45,.22)] transition duration-200 hover:-translate-y-0.5 sm:w-auto"
+              >
+                Купить этап целиком · {stage.price.toLocaleString('ru-RU')} ₽
+                {stageDiscountPercent(stage) > 0 && (
+                  <span className="ml-2 rounded-full bg-on-accent px-2 py-[2px] text-[10px] text-accent">
+                    −{stageDiscountPercent(stage)}%
+                  </span>
+                )}
+              </button>
+            </div>
+          </Reveal>
+        )}
         {stage && stage.assignments.length > 0 && (
           <Reveal delay>
             <AssignmentCarousel notify={notify} assignments={stage.assignments} stageId={stageId} onBuy={handleBuy} />
@@ -314,8 +361,9 @@ export function Reviews() {
           <span className={`${label} text-ink`}>Отзывы</span>
           <h2 className={heading}>Отзывы учеников и родителей.</h2>
           <p className="text-muted text-sm leading-[1.7] pt-[30px]">
-            Демонстрационные отзывы — до появления реальных кейсов их можно заменить на блок «Об авторе
-            методики».
+            Что говорят ученики и их родители о занятиях по методике: как меняется игра, появляется ли привычка
+            искать тактику в каждой партии и помогают ли разборы ход за ходом быстрее замечать удары, вилки и
+            матовые угрозы.
           </p>
         </Reveal>
         <div className="grid gap-3.5">

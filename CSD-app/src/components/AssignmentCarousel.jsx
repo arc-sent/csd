@@ -23,7 +23,12 @@ function AssignmentCard({assignment, index, onBuy}) {
       <h3 className="font-display text-[17px] sm:text-[19px] leading-[1.15] tracking-[-.03em] mb-2.5 min-h-[38px] sm:min-h-11">
         {assignment.name}
       </h3>
-      <p className="text-xs text-muted mb-[18px]">{assignment.tasksCount} задач</p>
+      <p className="text-xs text-muted mb-2">{assignment.tasksCount} задач</p>
+      {assignment.bonus && (
+        <span className="self-start mb-3 inline-flex items-center gap-1 rounded-full bg-accent-soft text-accent-strong px-2.5 py-[4px] text-[9px] font-extrabold uppercase tracking-[.06em]">
+          ♛ Бонус при покупке этапа
+        </span>
+      )}
       <div className="flex items-baseline gap-1.5 mt-auto mb-4">
         <b className="font-display text-[22px] sm:text-[26px] tracking-[-.04em]">{assignment.price.toLocaleString('ru-RU')} ₽</b>
         <small className="text-[10px] text-faint">/ задание</small>

@@ -22,7 +22,8 @@ const mount = '<div id="root"></div>';
 // краулера не оставалось пустого <div id="root"> без JS.
 const pages = [
   {file: 'index.html', ssrPath: '/'},
-  {file: 'metodika/index.html', ssrPath: '/metodika'}
+  {file: 'metodika/index.html', ssrPath: '/metodika'},
+  {file: 'avtor/index.html', ssrPath: '/avtor'}
 ];
 
 for (const {file, ssrPath} of pages) {

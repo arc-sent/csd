@@ -8,6 +8,7 @@ import {buildHref} from '../lib/route.js';
 const NAV = [
   ['#how', 'Как это работает'],
   ['/metodika/', 'Методика'],
+  ['/avtor/', 'Об авторе'],
   ['#plans', 'Тарифы'],
   ['#reviews', 'Отзывы'],
   ['#contacts', 'Контакты']
@@ -34,9 +35,7 @@ export function Brand({className = '', isCabinet = false, standalone = false}) {
       className={`flex items-center gap-2.5 font-display font-extrabold tracking-[-.04em] ${className}`}
       href={href}
     >
-      <span className="grid place-items-center w-[34px] h-[34px] rounded-[11px] bg-invert text-invert-fg text-xl -rotate-6">
-        ♞
-      </span>
+      <img src="/logo.png" alt="" width="38" height="38" className="w-[38px] h-[38px] shrink-0" />
       <span className="text-[17px] sm:text-xl">
         ChessSchool<span className="text-accent">Dinamik</span>
       </span>

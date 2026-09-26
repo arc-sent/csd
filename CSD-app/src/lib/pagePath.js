@@ -13,3 +13,5 @@ export function currentPath() {
 
 // '/metodika' и '/metodika/' — одна и та же страница.
 export const isMetodikaPath = path => path.replace(/\/+$/, '') === '/metodika';
+
+export const isAvtorPath = path => path.replace(/\/+$/, '') === '/avtor';

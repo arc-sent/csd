@@ -161,6 +161,7 @@ model Assignment {
   name        String
   description String    @default("")
   price       Float     @default(0)
+  bonus       Boolean   @default(false) // бесплатно при покупке этапа целиком
   status      String    @default("draft") // draft | published | archived
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

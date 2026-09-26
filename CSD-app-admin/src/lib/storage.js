@@ -30,8 +30,8 @@ export function getAssignment(id) {
   return request('/assignments/' + id);
 }
 function assignmentPayload(assignment) {
-  const { stageId, name, description, price, status } = assignment;
-  return { stageId, name, description, price: price == null ? 0 : price, status };
+  const { stageId, name, description, price, bonus, status } = assignment;
+  return { stageId, name, description, price: price == null ? 0 : price, bonus: Boolean(bonus), status };
 }
 export function upsertAssignment(assignment) {
   if (assignment.id) {
@@ -110,5 +110,5 @@ export function blankStage() {
   return { id: null, name: '', description: '', price: 0, status: 'draft' };
 }
 export function blankAssignment(stageId) {
-  return { id: null, stageId: stageId || null, name: '', description: '', price: 1200, status: 'draft' };
+  return { id: null, stageId: stageId || null, name: '', description: '', price: 1200, bonus: false, status: 'draft' };
 }

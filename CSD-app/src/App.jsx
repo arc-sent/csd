@@ -4,6 +4,8 @@ import {Hero} from './components/Hero.jsx';
 import {Audience, Benefits, HowItWorks, Plans, Reviews} from './components/Sections.jsx';
 import {DynamicsTeaser} from './components/DynamicsTeaser.jsx';
 import {MetodikaPage} from './components/MetodikaPage.jsx';
+import {AuthorTeaser} from './components/AuthorTeaser.jsx';
+import {AuthorPage} from './components/AuthorPage.jsx';
 import {Demo} from './components/Demo.jsx';
 import {FinalCta, Footer} from './components/Faq.jsx';
 import {AuthModal} from './components/AuthModal.jsx';
@@ -15,7 +17,7 @@ import {ToastProvider, useToast} from './hooks/useToast.jsx';
 import {container, sectionPad, Button} from './components/ui.jsx';
 import {useRoute} from './lib/route.js';
 import {useDocumentMeta} from './lib/seo.js';
-import {currentPath, isMetodikaPath} from './lib/pagePath.js';
+import {currentPath, isAvtorPath, isMetodikaPath} from './lib/pagePath.js';
 
 function CabinetGate({onOpenAuth}) {
   return (
@@ -72,6 +74,7 @@ function Shell() {
             <Audience />
             <HowItWorks />
             <DynamicsTeaser />
+            <AuthorTeaser />
             <Demo notify={notify} />
             <Benefits />
             <Plans notify={notify} />
@@ -93,11 +96,12 @@ export default function App() {
   // /metodika — отдельная страница вне обычного лендинг/кабинет переключения
   // (см. lib/pagePath.js): у неё свой адрес, свой пререндер и она не завязана
   // на ?view= в query-строке, которым живёт остальной роутинг сайта.
-  const isMetodika = isMetodikaPath(currentPath());
+  const path = currentPath();
+  const page = isMetodikaPath(path) ? <MetodikaPage /> : isAvtorPath(path) ? <AuthorPage /> : <Shell />;
 
   return (
     <AuthProvider>
-      <ToastProvider>{isMetodika ? <MetodikaPage /> : <Shell />}</ToastProvider>
+      <ToastProvider>{page}</ToastProvider>
     </AuthProvider>
   );
 }
