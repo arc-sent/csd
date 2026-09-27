@@ -35,7 +35,7 @@ export function Demo({notify}) {
           className="[&_.text-muted]:text-[#95968f] [&_span]:text-[#c0c1ba]"
         />
 
-        <div className="grid gap-2.5 mb-5">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 mb-5">
           {TASKS.map(task => (
             <div
               key={task.id}

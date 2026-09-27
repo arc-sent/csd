@@ -167,7 +167,7 @@ textarea.admin-input{min-height:76px;padding:10px 14px;resize:vertical}
 .entity-form-fields textarea.entity-form-input{min-height:260px;padding-top:14px;resize:vertical}
 .entity-form-preview{position:sticky;top:24px}
 @media(max-width:900px){
-  .entity-form-layout{grid-template-columns:1fr}
+  .entity-form-layout{grid-template-columns:minmax(0,1fr)}
   .entity-form-preview{position:static}
 }
 .empty-state{display:none;text-align:center;color:var(--muted);font-size:13px;padding:60px 20px;border:1px dashed var(--line);border-radius:var(--radius);background:var(--paper)}

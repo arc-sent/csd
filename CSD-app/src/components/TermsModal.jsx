@@ -20,7 +20,7 @@ export function TermsModal({onAccept, onClose, onDecline, readOnly = false}) {
         ref={scrollRef}
         onScroll={checkEnd}
         tabIndex={0}
-        className="max-h-[52vh] overflow-y-auto pr-3 -mr-1 mb-5 rounded-xl border border-line bg-paper p-4 outline-none focus:border-ink"
+        className="max-h-[52vh] overflow-y-auto pr-3 -mr-1 mb-5 rounded-xl border border-line bg-paper p-3 sm:p-4 [overflow-wrap:anywhere] outline-none focus:border-ink"
       >
         <TermsContent />
       </div>

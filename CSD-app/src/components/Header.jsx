@@ -32,11 +32,11 @@ export function Brand({className = '', isCabinet = false, standalone = false}) {
   const href = isCabinet ? window.location.pathname : standalone ? '/' : '#top';
   return (
     <a
-      className={`flex items-center gap-2.5 font-display font-extrabold tracking-[-.04em] ${className}`}
+      className={`flex items-center gap-2.5 max-[359px]:gap-1.5 font-display font-extrabold tracking-[-.04em] ${className}`}
       href={href}
     >
-      <img src="/logo.png" alt="" width="38" height="38" className="w-[38px] h-[38px] shrink-0" />
-      <span className="text-[17px] sm:text-xl">
+      <img src="/logo.png" alt="" width="38" height="38" className="w-[38px] h-[38px] max-[359px]:w-[30px] max-[359px]:h-[30px] shrink-0" />
+      <span className="text-[17px] max-[359px]:text-[15px] sm:text-xl">
         ChessSchool<span className="text-accent">Dinamik</span>
       </span>
     </a>
@@ -70,7 +70,7 @@ export function Header({isCabinet = false, standalone = false, navigate, onOpenA
       className="header-drop sticky top-0 z-50 bg-header-bg backdrop-blur-[14px] border-b border-header-line"
       id="top"
     >
-      <div className={`${container} flex items-center justify-between gap-7 h-[68px] sm:h-[76px]`}>
+      <div className={`${container} flex items-center justify-between gap-3 sm:gap-7 h-[68px] sm:h-[76px]`}>
         <Brand isCabinet={isCabinet} standalone={standalone} />
 
         <nav className="hidden lg:flex gap-[26px] text-[13px] font-semibold text-muted" aria-label="Основная навигация">
@@ -97,7 +97,7 @@ export function Header({isCabinet = false, standalone = false, navigate, onOpenA
             </button>
           )}
 
-          <ThemeToggle />
+          <ThemeToggle className="max-sm:hidden" />
 
           <button
             type="button"
@@ -149,6 +149,10 @@ export function Header({isCabinet = false, standalone = false, navigate, onOpenA
               Войти
             </button>
           )}
+          <div className="sm:hidden flex items-center justify-between py-3 mt-1 border-t border-line text-sm font-bold">
+            Тема оформления
+            <ThemeToggle />
+          </div>
         </div>
       )}
     </header>

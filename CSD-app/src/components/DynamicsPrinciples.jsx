@@ -222,14 +222,14 @@ export function DynamicsPrinciples({backLink}) {
           </p>
         </Reveal>
 
-        <div className="grid gap-2.5">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5">
           <Reveal>
             <TaskAccordion large {...SECTIONS[0]} example={EXAMPLE_BY_WAY[SECTIONS[0].code]} />
           </Reveal>
 
           <Reveal delay>
             <TaskAccordion large {...SECTIONS[1]}>
-              <div className="grid gap-2.5">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5">
                 {MOTIFS.map((motif, i) => (
                   <Reveal key={motif.code} delay={i % 2 === 1} as="div">
                     <TaskAccordion {...motif} example={EXAMPLE_BY_MOTIF[motif.code]} nested />
