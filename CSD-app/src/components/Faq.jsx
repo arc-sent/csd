@@ -34,8 +34,8 @@ export function FinalCta() {
 
 const FOOTER_COLUMNS = [
   ['Навигация', [['#how', 'Как это работает'], ['#plans', 'Тарифы'], ['#reviews', 'Отзывы']]],
-  ['Документы', [['#terms', 'Пользовательское соглашение'], ['#privacy', 'Политика конфиденциальности'], ['#', 'Реквизиты продавца']]],
-  ['Контакты', [['mailto:chessdinamika@yandex.ru', 'chessdinamika@yandex.ru'], ['#', 'Telegram'], ['#', 'VK']]]
+  ['Документы', [['#terms', 'Пользовательское соглашение'], ['#privacy', 'Политика конфиденциальности']]],
+  ['Контакты', [['mailto:chessdinamika@yandex.ru', 'chessdinamika@yandex.ru']]]
 ];
 
 export function Footer({isCabinet = false}) {

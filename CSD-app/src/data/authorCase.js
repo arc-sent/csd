@@ -988,9 +988,9 @@ export const AUTHOR_CASE = [
   },
   {
     type: "image",
-    src: "/avtor/179.webp",
+    src: "/avtor/179-2.webp",
     w: 1280,
-    h: 889
+    h: 843
   },
   {
     type: "text",
