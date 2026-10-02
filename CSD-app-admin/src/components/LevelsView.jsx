@@ -107,7 +107,7 @@ export default function LevelsView({ assignment, notify, onBack, onCreateTask, o
           <div className="levels-grid">
             {filtered.map(level => (
               <article key={level.id} className="level-card">
-                <MiniBoard position={level.position} />
+                <MiniBoard position={level.position} flipped={level.turn === 'b'} />
                 <div className="level-card-body">
                   <div className="level-card-top">
                     <h3>{level.name || 'Без названия'}</h3>

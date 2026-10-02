@@ -26,8 +26,10 @@ export default function ReviewView({ draft, dispatch, onEdit, onSaveDraft, onPub
   }
 
   const squares = [];
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
+  const flipped = draft.turn === 'b';
+  for (let dr = 0; dr < 8; dr++) {
+    for (let dc = 0; dc < 8; dc++) {
+      const [r, c] = flipped ? [7 - dr, 7 - dc] : [dr, dc];
       const piece = draft.position[r][c];
       const art = PIECE_ART[piece];
       squares.push(

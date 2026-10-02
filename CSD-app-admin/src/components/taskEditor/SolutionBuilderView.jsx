@@ -173,8 +173,10 @@ export default function SolutionBuilderView({ draft, dispatch, onBack, onNext, o
         </div>
 
         <div className="board-frame editor-board-frame">
+          <div className="board-ranks" aria-hidden="true">{(draft.turn === 'b' ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1]).map(n => <span key={n}>{n}</span>)}</div>
           <Board
             position={buildPosition}
+            orientation={draft.turn === 'b' ? 'black' : 'white'}
             extraClassName="large interactive"
             squareClassName={(r, c) => {
               const classes = [];
@@ -187,6 +189,7 @@ export default function SolutionBuilderView({ draft, dispatch, onBack, onNext, o
             onSquareClick={handleBoardClick}
             ariaLabel="Доска конструктора решения"
           />
+          <div className="board-files" aria-hidden="true">{(draft.turn === 'b' ? FILES.split('').reverse() : FILES.split('')).map(f => <span key={f}>{f}</span>)}</div>
         </div>
 
         <div className="current-step-box">

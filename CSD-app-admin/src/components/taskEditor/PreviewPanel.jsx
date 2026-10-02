@@ -38,6 +38,7 @@ export default function PreviewPanel({ draft }) {
       <div className="board-frame preview-board-frame">
         <Board
           position={frame.position}
+          orientation={draft.turn === 'b' ? 'black' : 'white'}
           squareClassName={(r, c) => {
             if (!frame.move) return '';
             const isFrom = frame.move.from[0] === r && frame.move.from[1] === c;

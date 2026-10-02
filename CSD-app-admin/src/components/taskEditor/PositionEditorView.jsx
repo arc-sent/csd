@@ -30,7 +30,7 @@ function parseFenSafe(raw) {
 }
 
 export default function PositionEditorView({ draft, dispatch, onCancel, onNext, notify }) {
-  const [orientation, setOrientation] = useState('white');
+  const orientation = draft.turn === 'b' ? 'black' : 'white';
   const [showCoords, setShowCoords] = useState(true);
   const [selectedPaletteType, setSelectedPaletteType] = useState(null);
   const [selectedSquare, setSelectedSquare] = useState(null);
@@ -129,10 +129,8 @@ export default function PositionEditorView({ draft, dispatch, onCancel, onNext, 
   }
 
   function handleFlip() {
-    const next = orientation === 'white' ? 'black' : 'white';
-    setOrientation(next);
     setSelectedSquare(null);
-    dispatch({ type: 'SET_TURN', turn: next === 'white' ? 'w' : 'b' });
+    dispatch({ type: 'SET_TURN', turn: draft.turn === 'b' ? 'w' : 'b' });
   }
 
   function handleClear() {

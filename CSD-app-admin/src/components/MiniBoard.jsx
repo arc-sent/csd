@@ -1,9 +1,10 @@
 import { PIECE_ART } from '../lib/pieceArt.js';
 
-export default function MiniBoard({ position }) {
+export default function MiniBoard({ position, flipped = false }) {
   const squares = [];
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
+  for (let dr = 0; dr < 8; dr++) {
+    for (let dc = 0; dc < 8; dc++) {
+      const [r, c] = flipped ? [7 - dr, 7 - dc] : [dr, dc];
       const piece = position[r][c];
       const art = PIECE_ART[piece];
       squares.push(
